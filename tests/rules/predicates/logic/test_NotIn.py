@@ -1,0 +1,82 @@
+"""Tests for the NotIn rule."""
+
+from typing import Any
+import pytest
+
+from simplibs.exception.testing import (
+    assert_exception_function,
+    assert_exception_fields,
+    Kwargs,
+)
+from simplibs.validate.testing import assert_rule_contract
+from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.rules.predicates.logic import NotIn
+
+
+def test_not_in_contract(subtests):
+    """Verify the complete contract of the NotIn rule."""
+    forbidden = ["banned", "suspended"]
+    rule = NotIn(forbidden)
+
+    assert_rule_contract(
+        subtests,
+        rule=rule,
+        valid_values=["active", "pending", 123, None],
+        invalid_values=["banned", "suspended"],
+        invalid_init_params=[
+            ((123,), {}),       # Scalar is not a container -> ParamError
+            (("string",), {}),  # String is not an allowed container -> ParamError
+            ((None,), {}),      # None is not a container -> ParamError
+        ],
+        check_raise_invalid=True,
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_not_in_exception_value_present(subtests):
+    """Verify diagnosis (ValueError) when value is found in forbidden collection."""
+    forbidden = ["admin", "root"]
+    rule = NotIn(forbidden)
+
+    assert_exception_function(
+        subtests,
+        func=rule.validate,
+        invalid_params=("admin", Kwargs(value_name="username")),
+        exception_type=ValidateError,
+        label="username",
+        value="admin",
+        error_name="NOT_IN_ERROR",
+        expected="value not in ['admin', 'root']",
+        problem="Value 'admin' is forbidden — it appears in ['admin', 'root'].",
+        how_to_fix="Provide a value that is not present in ['admin', 'root'].",
+        exception=ValueError,
+        verbose=False,
+    )
+
+
+def test_not_in_unhashable_value_is_valid():
+    """Verify that an unhashable value passes as valid for NotIn (cannot be present in set)."""
+    rule = NotIn({1, 2, 3})
+    assert rule.is_valid([1, 2]) is True
+
+
+def test_not_in_exception_unhashable_value(subtests):
+    """Verify diagnosis (TypeError) directly from build_exception for unhashable value in a set."""
+    rule = NotIn({1, 2, 3})
+
+    # Manually build exception from the rule
+    exc = rule.build_exception([1, 2], value_name="item")
+
+    # Verify exception fields generated via assert_exception_fields
+    assert_exception_fields(
+        subtests,
+        exc=exc,
+        label="item",
+        value=[1, 2],
+        error_name="NOT_IN_ERROR",
+        expected="value not in {1, 2, 3}",
+        problem="Value [1, 2] of type 'list' cannot be checked against container 'set'.",
+        how_to_fix="Provide a hashable value or a compatible container.",
+        exception=TypeError,
+    )

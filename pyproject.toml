@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=69.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "simplibs-validate"
+version = "0.1.0"
+description = "A powerful, composable, and developer-friendly validation framework for Python with detailed diagnostic telemetry."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+keywords = [
+    "validation",
+    "validator",
+    "schema",
+    "rules",
+    "data-validation",
+    "type-hints",
+    "testing",
+    "simplibs",
+    "simplibs-validate",
+    "developer-tools",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Testing",
+]
+dependencies = [
+    "simplibs-exception>=1.0.0",
+    "simplibs-sentinels>=0.1.0",
+]
+
+[[project.authors]]
+name = "Dalibor Sova (Sudip2708)"
+email = "daliborsova@seznam.cz"
+
+[project.urls]
+Homepage = "https://github.com/simplibs/simplibs-validate"
+Repository = "https://github.com/simplibs/simplibs-validate"
+Issues = "https://github.com/simplibs/simplibs-validate/issues"
+Changelog = "https://github.com/simplibs/simplibs-validate/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-v"
+
+[tool.setuptools.packages.find]
+where = ["src"]

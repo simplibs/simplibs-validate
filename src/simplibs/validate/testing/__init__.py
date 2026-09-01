@@ -1,0 +1,1 @@
+from .assert_rule_contract import assert_rule_contract
