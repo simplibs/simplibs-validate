@@ -2,7 +2,7 @@ from typing import Any
 import math
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 
 
 class IsInfinity(Rule):
@@ -57,7 +57,7 @@ class IsInfinity(Rule):
             expected = "float('inf') or float('-inf')"
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="IS_INFINITY_ERROR",
             label=value_name,
             expected=expected,

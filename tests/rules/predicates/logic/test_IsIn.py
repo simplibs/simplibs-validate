@@ -5,12 +5,12 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.logic import IsIn
 
 
 def test_is_in_contract(subtests):
-    """Verify the complete contract of the IsIn rule."""
+    """Verify the complete contract of the IsIn rule (non-strict mode)."""
     options = [1, 2, "admin", None]
     rule = IsIn(options)
 
@@ -30,6 +30,31 @@ def test_is_in_contract(subtests):
     )
 
 
+def test_is_in_strict_mode(subtests):
+    """Verify strict type enforcement for bool vs int distinction."""
+    options = [1, 0]
+
+    non_strict_rule = IsIn(options, strict=False)
+    strict_rule = IsIn(options, strict=True)
+
+    with subtests.test("Non-strict allows True for 1 and False for 0"):
+        assert non_strict_rule.is_valid(1) is True
+        assert non_strict_rule.is_valid(True) is True
+        assert non_strict_rule.is_valid(0) is True
+        assert non_strict_rule.is_valid(False) is True
+
+    with subtests.test("Strict mode rejects True for 1 and False for 0"):
+        assert strict_rule.is_valid(1) is True
+        assert strict_rule.is_valid(0) is True
+        assert strict_rule.is_valid(True) is False
+        assert strict_rule.is_valid(False) is False
+
+    with subtests.test("Strict mode works for bool option containers"):
+        bool_strict_rule = IsIn([True], strict=True)
+        assert bool_strict_rule.is_valid(True) is True
+        assert bool_strict_rule.is_valid(1) is False
+
+
 def test_is_in_exception_value_missing(subtests):
     """Verify diagnosis (ValueError) when value is missing from collection."""
     options = ["draft", "published"]
@@ -39,7 +64,7 @@ def test_is_in_exception_value_missing(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("archived", Kwargs(value_name="status")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="status",
         value="archived",
         error_name="IS_IN_ERROR",
@@ -60,7 +85,7 @@ def test_is_in_exception_unhashable_value(subtests):
         subtests,
         func=rule.validate,
         invalid_params=([1, 2], Kwargs(value_name="payload")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="payload",
         value=[1, 2],
         error_name="IS_IN_ERROR",
@@ -81,7 +106,7 @@ def test_is_in_large_container_truncation(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(999, Kwargs(value_name="id")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="id",
         value=999,
         error_name="IS_IN_ERROR",

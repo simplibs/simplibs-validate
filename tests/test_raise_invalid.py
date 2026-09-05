@@ -1,7 +1,7 @@
 """Tests for the raise_invalid core function."""
 
 import pytest
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.raise_invalid import raise_invalid
 from simplibs.validate.rules.base_class import Rule
 
@@ -37,7 +37,7 @@ def test_raise_invalid_bypasses_rule_evaluation() -> None:
 
 
 def test_raise_invalid_with_callable_raises_validate_error() -> None:
-    """Verify raise_invalid with plain callable constructs and raises ValidateError."""
+    """Verify raise_invalid with plain callable constructs and raises ValidationError."""
     called = False
 
     def dummy_fn(x: object) -> bool:
@@ -45,7 +45,7 @@ def test_raise_invalid_with_callable_raises_validate_error() -> None:
         called = True
         return True
 
-    with pytest.raises(ValidateError) as exc_info:
+    with pytest.raises(ValidationError) as exc_info:
         raise_invalid("bad_val", dummy_fn, value_name="val_name", context="ctx_info")
 
     assert called is False, "raise_invalid must not execute the callable predicate"

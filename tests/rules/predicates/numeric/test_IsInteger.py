@@ -4,7 +4,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.numeric.IsInteger import (
     IsInteger,
     is_integer,
@@ -35,7 +35,7 @@ def test_is_integer_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(True, Kwargs(value_name="count")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="count",
         value=True,
         error_name="IS_INTEGER_ERROR",

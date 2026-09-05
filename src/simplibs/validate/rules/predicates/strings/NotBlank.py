@@ -1,7 +1,7 @@
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 
 
 class NotBlank(Rule):
@@ -55,7 +55,7 @@ class NotBlank(Rule):
             exception_type = ValueError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="NOT_BLANK_ERROR",
             label=value_name,
             expected="non-blank string",

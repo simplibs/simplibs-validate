@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.introspection import IsType
 
 
@@ -37,7 +37,7 @@ def test_is_type_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(instance, Kwargs(value_name="target_cls")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="target_cls",
         value=instance,
         error_name="IS_TYPE_ERROR",

@@ -2,7 +2,7 @@ import pytest
 # Test tools
 from simplibs.exception.testing import assert_exception_function
 # Tested function and exception
-from simplibs.validate.exceptions import ValidateError, build_validation_error
+from simplibs.validate.exceptions import ValidationError, build_validation_error
 
 
 def is_even(x: int) -> bool:
@@ -29,7 +29,7 @@ def test_build_validation_error_contract(subtests, rule, rule_name) -> None:
         subtests,
         raising_wrapper,
         invalid_params=(rule, value, value_name, context),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         error_name="VALIDATION_ERROR",
         label=value_name,
         expected=f"value satisfying callable condition '{rule_name}'",

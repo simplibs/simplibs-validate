@@ -1,7 +1,7 @@
 from typing import Any, Callable
 
 # Outers
-from ...exceptions import ValidateError
+from ...exceptions import ValidationError
 from ..base_class import Rule
 
 # Inners
@@ -68,7 +68,7 @@ class Compose(Rule):
             transformed = self.transformer(value)
         except Exception as transform_error:
             transformer_name = describe_rule(self.transformer)
-            return ValidateError(
+            return ValidationError(
                 error_name="COMPOSE_TRANSFORM_FAILED_ERROR",
                 label=value_name,
                 expected=f"value compatible with transformer '{transformer_name}'",
@@ -95,7 +95,7 @@ class Compose(Rule):
 
         # 3. Fallback (build exception if both transformation and validation
         #    unexpectedly passed)
-        return ValidateError(
+        return ValidationError(
             error_name="COMPOSE_UNREACHABLE_ERROR",
             label=value_name,
             expected="value passing both transformation and validation",

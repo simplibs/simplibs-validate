@@ -8,7 +8,7 @@ from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
 
 # Exceptions
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 
 # Rules
 from simplibs.validate.rules.containers import ForEach
@@ -66,7 +66,7 @@ def test_for_each_delegates_to_child_exception_with_index(subtests):
         subtests,
         func=rule.validate,
         invalid_params=([10, 20, "bad", 40], Kwargs(value_name="items")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="items[2]",
         value="bad",
         expected="integer",
@@ -83,7 +83,7 @@ def test_for_each_non_iterable_value_delegates_to_is_iterable(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(123, Kwargs(value_name="payload")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="payload",
         value=123,
         error_name="IS_ITERABLE_ERROR",
@@ -111,6 +111,6 @@ def test_for_each_unreachable_fallback():
     # Manually calling build_exception with a valid collection where no item fails:
     exc = rule.build_exception([1, 2, 3], value_name="valid_list")
 
-    assert isinstance(exc, ValidateError)
+    assert isinstance(exc, ValidationError)
     assert exc.error_name == "FOR_EACH_UNREACHABLE_ERROR"
     assert exc.exception is RuntimeError

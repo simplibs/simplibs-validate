@@ -1,7 +1,7 @@
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 
 
 class GreaterOrEqual(Rule):
@@ -62,7 +62,7 @@ class GreaterOrEqual(Rule):
             exception_type = TypeError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="GREATER_OR_EQUAL_ERROR",
             label=value_name,
             expected=f"value greater than or equal to {self.threshold!r}",

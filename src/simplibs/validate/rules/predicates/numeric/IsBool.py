@@ -1,7 +1,7 @@
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 
 
 class IsBool(Rule):
@@ -40,7 +40,7 @@ class IsBool(Rule):
         exception_type = TypeError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="IS_BOOL_ERROR",
             label=value_name,
             expected="a boolean (True or False)",

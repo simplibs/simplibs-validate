@@ -1,7 +1,7 @@
 from typing import Any
 from simplibs.exception.testing import assert_exception_function, maybe_subtest
 # Outers
-from ...exceptions import ValidateError
+from ...exceptions import ValidationError
 from ...rules.base_class import Rule
 
 
@@ -19,7 +19,7 @@ def assert_rule_build_exception(
     verbose: bool = True,
     intro: str = "",
 ) -> None:
-    """Verify that rule.build_exception() constructs valid, raisable ValidateError cards.
+    """Verify that rule.build_exception() constructs valid, raisable ValidationError cards.
 
     Args:
         subtests: The native pytest subtests fixture manager instance.
@@ -42,7 +42,7 @@ def assert_rule_build_exception(
 
     for index, val in enumerate(invalid_values):
         kwargs: dict[str, Any] = dict(
-            exception_type=ValidateError,
+            exception_type=ValidationError,
             label=sample_label,
             context=sample_context,
             verbose=verbose,
@@ -91,7 +91,7 @@ _DESIGN_NOTES = """
 
 ## Purpose
 Verifies that `Rule.build_exception()` produces a well-formed, raisable
-`ValidateError` diagnostic card for every invalid value — reusing
+`ValidationError` diagnostic card for every invalid value — reusing
 `simplibs-exception`'s own `assert_exception_function` rather than
 re-implementing raise/type/field checking here.
 
@@ -106,7 +106,7 @@ re-implementing raise/type/field checking here.
   *raises*, so this helper wraps the call in a small local
   `raising_wrapper(value)` that raises whatever `build_exception` returns.
 * **Basic Metadata via `assert_exception_function`:**
-  Delegates the type check (`ValidateError`), and the `label`/`context`/
+  Delegates the type check (`ValidationError`), and the `label`/`context`/
   `value` echo-back checks, to `assert_exception_function`.
 * **Optional Strict Fields:**
   `expected_error_name` and `expected_exception_type` are opt-in — when

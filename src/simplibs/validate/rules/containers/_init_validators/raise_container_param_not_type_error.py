@@ -1,6 +1,6 @@
 from typing import Any, NoReturn
 # Outers
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 
 
 def raise_container_param_not_type_error(
@@ -18,7 +18,7 @@ def raise_container_param_not_type_error(
         fix_msg += f" Example: {rule_name}({example_usage})"
 
     # 2. Build and raise the exception
-    raise ValidateError(
+    raise ValidationError(
         error_name="INVALID_PARAMETER_TYPE",
         label=param_name,
         expected=expected_type,
@@ -46,7 +46,7 @@ constructors (`__init__`).
 
 * **Fail-Fast Safeguard:**
   Ensures that invalid parameter types passed during rule instantiation
-  raise a structured `ValidateError` (wrapping `TypeError`) immediately.
+  raise a structured `ValidationError` (wrapping `TypeError`) immediately.
 * **Dynamic Diagnostic Composition:**
   Dynamically builds contextual `how_to_fix` instructions incorporating
   example usages when provided.

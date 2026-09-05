@@ -4,7 +4,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.numeric import IsFloat
 
 
@@ -32,7 +32,7 @@ def test_is_float_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(10, Kwargs(value_name="ratio")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="ratio",
         value=10,
         error_name="IS_FLOAT_ERROR",

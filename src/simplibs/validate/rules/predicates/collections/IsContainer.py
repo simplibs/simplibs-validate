@@ -1,7 +1,7 @@
 from typing import Any, Container
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 
 
 class IsContainer(Rule):
@@ -39,7 +39,7 @@ class IsContainer(Rule):
         context: str | None = None,
     ) -> Exception:
 
-        return ValidateError(
+        return ValidationError(
             error_name="IS_CONTAINER_ERROR",
             label=value_name,
             expected="a container collection (list, tuple, set, dict)",

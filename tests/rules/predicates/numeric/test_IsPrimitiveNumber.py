@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.numeric.IsPrimitiveNumber import (
     IsPrimitiveNumber,
     is_primitive_number,
@@ -35,7 +35,7 @@ def test_is_primitive_number_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(Decimal("10"), Kwargs(value_name="score")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="score",
         value=Decimal("10"),
         error_name="IS_PRIMITIVE_NUMBER_ERROR",

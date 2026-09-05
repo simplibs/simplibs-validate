@@ -1,8 +1,7 @@
 from typing import Any
-from simplibs.sentinels import UNSET, UnsetType
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 from ..numeric.IsInteger import is_non_negative_integer
 from .._init_validators import (
     raise_param_not_non_negative_integer_error,
@@ -120,7 +119,7 @@ class HasLength(Rule):
             exception_type = TypeError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="HAS_LENGTH_ERROR",
             label=value_name,
             expected=expected,

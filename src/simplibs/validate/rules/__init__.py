@@ -32,6 +32,7 @@ from .predicates.checkers import (
 # Predicates — collections
 from .predicates.collections import (
     AllUnique,
+    HasItem,
     HasKey,
     HasKeys,
     IsContainer,
@@ -94,6 +95,13 @@ from .predicates.strings import (
     NotBlank,
     Regex,
     StartsWith,
+    IsSubstringOf,
+)
+
+# Predicates — typing
+from .typing import (
+    IsAny,
+    IsTyping,
 )
 
 
@@ -142,6 +150,7 @@ not_empty           = NotEmpty()
 # ---- predicates/collections ------------------------------------------------
 
 all_unique          = AllUnique()
+has_item            = HasItem           # item
 has_key             = HasKey            # key
 has_keys            = HasKeys           # *keys
 is_container        = IsContainer()
@@ -151,21 +160,19 @@ is_superset_of      = IsSupersetOf      # reference
 
 # ---- predicates/comparisons ------------------------------------------------
 
-equals              = Equals            # expected_value
-greater_or_equal    = GreaterOrEqual    # threshold
-greater_than        = GreaterThan       # threshold
-in_range            = InRange           # min_val, max_val, include_min=True,
-                                        # include_max=True
-less_or_equal       = LessOrEqual       # threshold
-less_than           = LessThan          # threshold
-not_equals          = NotEquals         # forbidden
+equals = eq         = Equals            # expected_value
+greater_or_equal = ge = GreaterOrEqual    # threshold
+greater_than = gt   = GreaterThan       # threshold
+in_range            = InRange           # min_val, max_val, include_min=True, include_max=True
+less_or_equal = le  = LessOrEqual       # threshold
+less_than = lt      = LessThan          # threshold
+not_equals = ne     = NotEquals         # forbidden
 
 
 # ---- predicates/introspection ----------------------------------------------
 
-has_attribute       = HasAttribute      # attr_name
-has_length          = HasLength         # length=None, *, min_length=None,
-                                        # min_length=None, max_length=None
+has_attribute = has_attr = HasAttribute      # attr_name
+has_length          = HasLength         # length=None, *, min_length=None, min_length=None, max_length=None
 is_callable         = IsCallable()
 is_dataclass        = IsDataclass()
 is_hashable         = IsHashable()
@@ -177,7 +184,7 @@ is_type             = IsType()
 
 # ---- predicates/logic ------------------------------------------------------
 
-same_as             = Is                # expected
+is_same = same_as   = Is                # expected
 is_in               = IsIn              # options
 is_not              = IsNot             # forbidden
 not_in              = NotIn             # options
@@ -189,7 +196,7 @@ is_bool             = IsBool()
 is_decimal          = IsDecimal()
 is_float            = IsFloat()
 is_infinity         = IsInfinity()
-is_integer          = IsInteger()
+is_integer = is_int = IsInteger()
 is_nan              = IsNan()
 is_number           = IsNumber()
 is_pi               = IsPi              # decimal_places
@@ -202,10 +209,17 @@ is_zero             = IsZero()
 contains            = Contains          # substring
 ends_with           = EndsWith          # suffix
 is_blank            = IsBlank()
-is_string           = IsString()
+is_string = is_str  = IsString()
 not_blank           = NotBlank()
 regex               = Regex             # pattern
 starts_with         = StartsWith        # prefix
+is_substring_of     = IsSubstringOf     # target_string
+
+# ---- predicates/typing -------------------------------------------------------
+
+is_any = always_true = IsAny()
+always_false         = ~IsAny()
+is_typing            = IsTyping
 
 
 # ============================================================================
@@ -240,6 +254,7 @@ rule_class = SimpleNamespace(
 
     # collections
     AllUnique=AllUnique,
+    HasItem=HasItem,
     HasKey=HasKey,
     HasKeys=HasKeys,
     IsContainer=IsContainer,
@@ -292,6 +307,11 @@ rule_class = SimpleNamespace(
     NotBlank=NotBlank,
     Regex=Regex,
     StartsWith=StartsWith,
+    IsSubstringOf=IsSubstringOf,
+
+    # typing
+    IsAny=IsAny,
+    IsTyping=IsTyping,
 )
 
 
@@ -324,6 +344,7 @@ rules = SimpleNamespace(
 
     # collections
     all_unique=all_unique,
+    has_item=has_item,
     has_key=has_key,
     has_keys=has_keys,
     is_container=is_container,
@@ -332,15 +353,22 @@ rules = SimpleNamespace(
 
     # comparisons
     equals=equals,
+    eq=eq,
     greater_or_equal=greater_or_equal,
+    ge=ge,
     greater_than=greater_than,
+    gt=gt,
     in_range=in_range,
     less_or_equal=less_or_equal,
+    le=le,
     less_than=less_than,
+    lt=lt,
     not_equals=not_equals,
+    ne=ne,
 
     # introspection
     has_attribute=has_attribute,
+    has_attr=has_attr,
     has_length=has_length,
     is_callable=is_callable,
     is_dataclass=is_dataclass,
@@ -352,6 +380,7 @@ rules = SimpleNamespace(
 
     # logic
     same_as=same_as,
+    is_same=is_same,
     is_in=is_in,
     is_not=is_not,
     not_in=not_in,
@@ -362,6 +391,7 @@ rules = SimpleNamespace(
     is_float=is_float,
     is_infinity=is_infinity,
     is_integer=is_integer,
+    is_int=is_int,
     is_nan=is_nan,
     is_number=is_number,
     is_pi=is_pi,
@@ -373,17 +403,18 @@ rules = SimpleNamespace(
     ends_with=ends_with,
     is_blank=is_blank,
     is_string=is_string,
+    is_str=is_str,
     not_blank=not_blank,
     regex=regex,
     starts_with=starts_with,
+    is_substring_of=is_substring_of,
+
+    # typing
+    always_false=always_false,
+    always_true=always_true,
+    is_any=is_any,
+    is_typing=is_typing,
 )
-
-# __all__ = [
-#     "Rule",
-#     "rule_class",
-#     "rules",
-# ]
-
 
 # ============================================================================
 # Public exports
@@ -416,6 +447,7 @@ __all__ = [
 
     # collections
     "AllUnique",
+    "HasItem",
     "HasKey",
     "HasKeys",
     "IsContainer",
@@ -468,6 +500,11 @@ __all__ = [
     "NotBlank",
     "Regex",
     "StartsWith",
+    "IsSubstringOf",
+
+    # typing
+    "IsAny",
+    "IsTyping",
 
     # shortcuts
     "all_of",
@@ -485,19 +522,27 @@ __all__ = [
     "is_true",
     "not_empty",
     "all_unique",
+    "has_item",
     "has_key",
     "has_keys",
     "is_container",
     "is_subset_of",
     "is_superset_of",
     "equals",
+    "eq",
     "greater_or_equal",
+    "ge",
     "greater_than",
+    "gt",
     "in_range",
     "less_or_equal",
+    "le",
     "less_than",
+    "lt",
     "not_equals",
+    "ne",
     "has_attribute",
+    "has_attr",
     "has_length",
     "is_callable",
     "is_dataclass",
@@ -507,6 +552,7 @@ __all__ = [
     "is_subclass",
     "is_type",
     "same_as",
+    "is_same",
     "is_in",
     "is_not",
     "not_in",
@@ -515,6 +561,7 @@ __all__ = [
     "is_float",
     "is_infinity",
     "is_integer",
+    "is_int",
     "is_nan",
     "is_number",
     "is_pi",
@@ -524,9 +571,16 @@ __all__ = [
     "ends_with",
     "is_blank",
     "is_string",
+    "is_str",
     "not_blank",
     "regex",
     "starts_with",
+    "is_substring_of",
+    "is_typing",
+    "always_false",
+    "always_true",
+    "is_any",
+    "is_typing",
 ]
 
 
@@ -695,14 +749,15 @@ are compound names rather than the keywords themselves.
 
 ### `predicates/collections/`
 
-| Shortcut         | Parameters  | Logic                                 |
-|------------------|-------------|---------------------------------------|
-| `all_unique`     | —           | All values are unique.                |
-| `has_key`        | `key`       | The key exists in the value.          |
-| `has_keys`       | `*keys`     | All specified keys exist.             |
-| `is_container`   | —           | Value is a supported container.       |
-| `is_subset_of`   | `reference` | Value is a subset of the reference.   |
-| `is_superset_of` | `reference` | Value is a superset of the reference. |
+| Shortcut         | Parameters  | Logic                                        |
+|------------------|-------------|----------------------------------------------|
+| `all_unique`     | —           | All values are unique.                       |
+| `has_item`       | `item`      | Container value must contain the given item. |
+| `has_key`        | `key`       | The key exists in the value.                 |
+| `has_keys`       | `*keys`     | All specified keys exist.                    |
+| `is_container`   | —           | Value is a supported container.              |
+| `is_subset_of`   | `reference` | Value is a subset of the reference.          |
+| `is_superset_of` | `reference` | Value is a superset of the reference.        |
 
 
 ### `predicates/comparisons/`
@@ -710,19 +765,25 @@ are compound names rather than the keywords themselves.
 | Shortcut           | Parameters                                             | Logic                                   |
 |--------------------|--------------------------------------------------------|-----------------------------------------|
 | `equals`           | `expected_value`                                       | `value == expected_value`               |
+| `eq`               | `expected_value`                                       | `value == expected_value`               |
 | `greater_or_equal` | `threshold`                                            | `value >= threshold`                    |
+| `ge`               | `threshold`                                            | `value >= threshold`                    |
 | `greater_than`     | `threshold`                                            | `value > threshold`                     |
+| `gt`               | `threshold`                                            | `value > threshold`                     |
 | `in_range`         | `min_val, max_val, include_min=True, include_max=True` | Value lies within the configured range. |
 | `less_or_equal`    | `threshold`                                            | `value <= threshold`                    |
+| `le`               | `threshold`                                            | `value <= threshold`                    |
 | `less_than`        | `threshold`                                            | `value < threshold`                     |
+| `lt`               | `threshold`                                            | `value < threshold`                     |
 | `not_equals`       | `forbidden`                                            | `value != forbidden`                    |
-
+| `ne`               | `forbidden`                                            | `value != forbidden`                    |
 
 ### `predicates/introspection/`
 
 | Shortcut        | Parameters                                         | Logic                                       |
 |-----------------|----------------------------------------------------|---------------------------------------------|
 | `has_attribute` | `attr_name`                                        | Attribute exists on the value.              |
+| `has_attr`      | `attr_name`                                        | Attribute exists on the value.              |
 | `has_length`    | `length=None, *, min_length=None, max_length=None` | Value has the specified length or range.    |
 | `is_callable`   | —                                                  | Value is callable.                          |
 | `is_dataclass`  | —                                                  | Value is a dataclass instance or class.     |
@@ -738,6 +799,7 @@ are compound names rather than the keywords themselves.
 | Shortcut  | Parameters  | Logic                    |
 |-----------|-------------|--------------------------|
 | `same_as` | `expected`  | `value is expected`      |
+| `is_same` | `expected`  | `value is expected`      |
 | `is_in`   | `options`   | `value in options`       |
 | `is_not`  | `forbidden` | `value is not forbidden` |
 | `not_in`  | `options`   | `value not in options`   |
@@ -752,6 +814,7 @@ are compound names rather than the keywords themselves.
 | `is_float`            | —                | Value is a `float`.                                      |
 | `is_infinity`         | —                | Value is infinite.                                       |
 | `is_integer`          | —                | Value is an integer but not a boolean.                   |
+| `is_int`              | —                | Value is an integer but not a boolean.                   |
 | `is_nan`              | —                | Value is NaN.                                            |
 | `is_number`           | —                | Value is a supported numeric type other than `bool`.     |
 | `is_pi`               | `decimal_places` | Value equals π to the specified precision.               |
@@ -761,13 +824,25 @@ are compound names rather than the keywords themselves.
 
 ### `predicates/strings/`
 
-| Shortcut      | Parameters  | Logic                                        |
-|---------------|-------------|----------------------------------------------|
-| `contains`    | `substring` | Substring occurs in the value.               |
-| `ends_with`   | `suffix`    | Value ends with the suffix.                  |
-| `is_blank`    | —           | String contains only whitespace or is empty. |
-| `is_string`   | —           | Value is a `str`.                            |
-| `not_blank`   | —           | String contains non-whitespace characters.   |
-| `regex`       | `pattern`   | Regex search finds a match in the string.    |
-| `starts_with` | `prefix`    | Value starts with the prefix.                |
+| Shortcut        | Parameters      | Logic                                                |
+|-----------------|-----------------|------------------------------------------------------|
+| `contains`      | `substring`     | Substring occurs in the value.                       |
+| `ends_with`     | `suffix`        | Value ends with the suffix.                          |
+| `is_blank`      | —               | String contains only whitespace or is empty.         |
+| `is_string`     | —               | Value is a `str`.                                    |
+| `is_str`        | —               | Value is a `str`.                                    |
+| `not_blank`     | —               | String contains non-whitespace characters.           |
+| `regex`         | `pattern`       | Regex search finds a match in the string.            |
+| `starts_with`   | `prefix`        | Value starts with the prefix.                        |
+| `IsSubstringOf` | `target_string` | String value must be a substring of a target string. |
+
+
+### `typing/`
+
+| Shortcut       | Parameters   | Logic                                           |
+|----------------|--------------|-------------------------------------------------|
+| `always_false` | —            | Always fails validation (default-deny).         |
+| `always_true`  | —            | Always passes validation.                       |
+| `is_any`       | —            | Alias for `always_true` (accepts any value).    |
+| `is_typing`    | `annotation` | Value must satisfy the given typing annotation. |
 """

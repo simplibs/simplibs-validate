@@ -8,7 +8,7 @@ from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
 
 # Exceptions
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 
 # Rules
 from simplibs.validate.rules.predicates.arithmetic import DivisibleBy
@@ -53,7 +53,7 @@ def test_divisible_by_not_divisible_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(12, Kwargs(value_name="amount")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="amount",
         value=12,
         error_name="DIVISIBLE_BY_ERROR",
@@ -73,7 +73,7 @@ def test_divisible_by_type_error_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("4", Kwargs(value_name="code")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="code",
         value="4",
         error_name="DIVISIBLE_BY_ERROR",

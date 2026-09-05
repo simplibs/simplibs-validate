@@ -2,7 +2,7 @@ import pytest
 # Test tools
 from simplibs.exception.testing import assert_exception_function
 # Tested function and exception
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.containers._init_validators import (
     raise_container_param_not_type_error,
 )
@@ -38,13 +38,13 @@ def test_raise_container_param_not_type_error_contract(
     example_usage,
     fix_msg,
 ) -> None:
-    """Verify that raise_container_param_not_type_error raises a structured ValidateError wrapping TypeError."""
+    """Verify that raise_container_param_not_type_error raises a structured ValidationError wrapping TypeError."""
 
     assert_exception_function(
         subtests,
         raise_container_param_not_type_error,
         invalid_params=(rule_name, param_name, value, expected_type, example_usage),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         error_name="INVALID_PARAMETER_TYPE",
         label=param_name,
         expected=expected_type,

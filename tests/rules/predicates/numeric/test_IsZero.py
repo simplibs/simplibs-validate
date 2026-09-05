@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.numeric import IsZero
 
 
@@ -32,7 +32,7 @@ def test_is_zero_exception_type_error(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("0", Kwargs(value_name="balance")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="balance",
         value="0",
         error_name="IS_ZERO_ERROR",
@@ -52,7 +52,7 @@ def test_is_zero_exception_value_error(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(42, Kwargs(value_name="offset")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="offset",
         value=42,
         error_name="IS_ZERO_ERROR",

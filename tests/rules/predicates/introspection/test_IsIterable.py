@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.introspection import IsIterable
 
 
@@ -32,7 +32,7 @@ def test_is_iterable_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(123, Kwargs(value_name="items")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="items",
         value=123,
         error_name="IS_ITERABLE_ERROR",

@@ -2,7 +2,7 @@ import math
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 from ..numeric.IsPrimitiveNumber import is_primitive_number
 from .._init_validators import validate_param_is_primitive_number
 
@@ -95,7 +95,7 @@ class CloseTo(Rule):
             exception_type = ValueError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="CLOSE_TO_ERROR",
             label=value_name,
             expected=f"value close to {self.target!r}",

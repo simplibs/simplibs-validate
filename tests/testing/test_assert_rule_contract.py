@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 from _pytest.outcomes import Failed
 
-from simplibs.validate.exceptions import ParamError, ValidateError
+from simplibs.validate.exceptions import ParamError, ValidationError
 from simplibs.validate.rules.base_class import Rule
 from simplibs.validate.testing.assert_rule_contract import assert_rule_contract
 
@@ -23,8 +23,8 @@ class DummyValidRule(Rule):
 
     def build_exception(
         self, value: Any, value_name: str = "value", context: str = ""
-    ) -> ValidateError:
-        return ValidateError(
+    ) -> ValidationError:
+        return ValidationError(
             problem="Value exceeds limit or is not int.",
             expected=f"Integer <= {self.limit}",
             how_to_fix="Provide a smaller integer.",
@@ -42,9 +42,9 @@ class DummyTransformingRule(Rule):
 
     def build_exception(
         self, value: Any, value_name: str = "value", context: str = ""
-    ) -> ValidateError:
+    ) -> ValidationError:
         transformed = int(value) if isinstance(value, str) and value.lstrip("-").isdigit() else value
-        return ValidateError(
+        return ValidationError(
             problem="Transformed value is invalid.",
             expected="Positive integer.",
             how_to_fix="Provide valid input.",
@@ -60,7 +60,7 @@ class DummyBrokenIsValidRule(Rule):
         return 1 if value == 5 else 0  # type: ignore # Returns int instead of bool
 
     def build_exception(self, value: Any, value_name: str = "value", context: str = ""):
-        return ValidateError("Error")
+        return ValidationError("Error")
 
 
 class DummyBrokenValidateRule(Rule):
@@ -74,7 +74,7 @@ class DummyBrokenValidateRule(Rule):
         return value == 5
 
     def build_exception(self, value: Any, value_name: str = "value", context: str = ""):
-        return ValidateError("Error")
+        return ValidationError("Error")
 
 
 class DummyBrokenBuildExceptionRule(Rule):
@@ -83,7 +83,7 @@ class DummyBrokenBuildExceptionRule(Rule):
         return value == 5
 
     def build_exception(self, value: Any, value_name: str = "value", context: str = ""):
-        return ValidateError(
+        return ValidationError(
             problem="Error",
             expected="5",
             how_to_fix="Provide 5",
@@ -103,7 +103,7 @@ class DummyBrokenConstructorRule(Rule):
         return True
 
     def build_exception(self, value: Any, value_name: str = "value", context: str = ""):
-        return ValidateError("Error")
+        return ValidationError("Error")
 
 
 # --- Tests ---

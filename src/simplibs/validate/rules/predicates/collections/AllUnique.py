@@ -1,7 +1,7 @@
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 
 
 class AllUnique(Rule):
@@ -75,7 +75,7 @@ class AllUnique(Rule):
             exception_type = ValueError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="ALL_UNIQUE_ERROR",
             label=value_name,
             expected="all-unique items",

@@ -8,7 +8,7 @@ from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
 
 # Exceptions
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 
 # Rules
 from simplibs.validate.rules.containers import Compose
@@ -54,7 +54,7 @@ def test_compose_transformation_failure_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("abc", Kwargs(value_name="raw_input")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         error_name="COMPOSE_TRANSFORM_FAILED_ERROR",
         label="raw_input",
         expected="value compatible with transformer",
@@ -74,7 +74,7 @@ def test_compose_delegates_validator_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("0", Kwargs(value_name="score")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="score",
         expected="greater than 0",
         verbose=False,

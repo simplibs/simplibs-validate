@@ -10,7 +10,7 @@ def build_child_exception(
     value_name: str | None = None,
     context: str | None = None,
 ) -> Exception:
-    """Delegate exception construction to the rule, or build a fallback ValidateError for a callable."""
+    """Delegate exception construction to the rule, or build a fallback ValidationError for a callable."""
 
     # 1. Handling for a formal Rule instance
     if isinstance(rule, Rule):
@@ -34,6 +34,6 @@ child rules or callable predicates.
 * **Rule Polymorphism:**
   Calls `.build_exception(...)` if the child is a formal `Rule` instance.
 * **Callable Fallback:**
-  Uses `build_validation_error` to build a generic `ValidateError` card when
+  Uses `build_validation_error` to build a generic `ValidationError` card when
   the child is a raw function/lambda.
 """

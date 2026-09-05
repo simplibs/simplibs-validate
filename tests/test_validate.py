@@ -1,7 +1,7 @@
 """Tests for the main validate() orchestrator function."""
 
 import pytest
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.base_class import Rule
 from simplibs.validate.validate import validate
 
@@ -88,10 +88,10 @@ def test_validate_callable_failure_returns_bool() -> None:
 
 
 def test_validate_callable_failure_raises_validate_error() -> None:
-    """Verify that callable failure constructs a structured ValidateError via build_validation_error."""
+    """Verify that callable failure constructs a structured ValidationError via build_validation_error."""
     is_even = lambda x: x % 2 == 0
 
-    with pytest.raises(ValidateError) as exc_info:
+    with pytest.raises(ValidationError) as exc_info:
         validate(5, is_even, value_name="number", context="unit_test")
 
     err = exc_info.value

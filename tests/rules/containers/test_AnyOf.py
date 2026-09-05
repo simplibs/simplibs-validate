@@ -8,7 +8,7 @@ from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
 
 # Exceptions
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 
 # Rules
 from simplibs.validate.rules.containers import AnyOf
@@ -52,7 +52,7 @@ def test_any_of_exception_details(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("abc", Kwargs(value_name="payload")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         error_name="ANY_OF_ERROR",
         label="payload",
         expected="value satisfying at least one of:",

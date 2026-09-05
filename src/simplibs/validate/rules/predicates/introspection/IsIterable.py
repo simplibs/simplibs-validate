@@ -1,7 +1,7 @@
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 
 
 class IsIterable(Rule):
@@ -48,7 +48,7 @@ class IsIterable(Rule):
         exception_type = TypeError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="IS_ITERABLE_ERROR",
             label=value_name,
             expected="iterable value",

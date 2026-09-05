@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.numeric import IsDecimal
 
 
@@ -32,7 +32,7 @@ def test_is_decimal_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(10.5, Kwargs(value_name="price")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="price",
         value=10.5,
         error_name="IS_DECIMAL_ERROR",

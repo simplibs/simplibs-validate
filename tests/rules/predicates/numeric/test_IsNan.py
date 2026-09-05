@@ -4,7 +4,7 @@ import math
 import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.numeric import IsNan
 
 
@@ -27,7 +27,7 @@ def test_is_nan_contract(subtests):
     for invalid_val in invalid_values:
         with subtests.test(f"invalid_input_{invalid_val!r}"):
             assert rule.is_valid(invalid_val) is False
-            with pytest.raises(ValidateError):
+            with pytest.raises(ValidationError):
                 rule.validate(invalid_val)
 
 
@@ -39,7 +39,7 @@ def test_is_nan_exception_type_error(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("nan", Kwargs(value_name="val")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="val",
         value="nan",
         error_name="IS_NAN_ERROR",
@@ -59,7 +59,7 @@ def test_is_nan_exception_value_error(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(1.23, Kwargs(value_name="val")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="val",
         value=1.23,
         error_name="IS_NAN_ERROR",

@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 from _pytest.outcomes import Failed
 
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.base_class import Rule
 from simplibs.validate.testing.asserts.assert_rule_build_exception import (
     assert_rule_build_exception,
@@ -20,8 +20,8 @@ class DummyValidRule(Rule):
 
     def build_exception(
         self, value: Any, value_name: str = "value", context: str = ""
-    ) -> ValidateError:
-        return ValidateError(
+    ) -> ValidationError:
+        return ValidationError(
             problem="Value is invalid.",
             expected="Value must be 'valid'.",
             how_to_fix="Provide 'valid'.",
@@ -40,9 +40,9 @@ class DummyTransformingRule(Rule):
 
     def build_exception(
         self, value: Any, value_name: str = "value", context: str = ""
-    ) -> ValidateError:
+    ) -> ValidationError:
         transformed_value = int(value) if isinstance(value, str) and value.lstrip("-").isdigit() else value
-        return ValidateError(
+        return ValidationError(
             problem="Transformed value is invalid.",
             expected="Positive number.",
             how_to_fix="Fix it.",
@@ -52,15 +52,15 @@ class DummyTransformingRule(Rule):
         )
 
 
-class DummyNonValidateErrorRule(Rule):
-    """Rule that raises a regular TypeError instead of ValidateError."""
+class DummyNonValidationErrorRule(Rule):
+    """Rule that raises a regular TypeError instead of ValidationError."""
     def is_valid(self, value: Any) -> bool:
         return False
 
     def build_exception(
         self, value: Any, value_name: str = "value", context: str = ""
     ) -> Exception:
-        return TypeError("Not a ValidateError instance")  # type: ignore
+        return TypeError("Not a ValidationError instance")  # type: ignore
 
 
 class DummyWrongMetadataRule(Rule):
@@ -70,8 +70,8 @@ class DummyWrongMetadataRule(Rule):
 
     def build_exception(
         self, value: Any, value_name: str = "value", context: str = ""
-    ) -> ValidateError:
-        return ValidateError(
+    ) -> ValidationError:
+        return ValidationError(
             problem="Value is invalid.",
             expected="Value must be valid.",
             how_to_fix="Fix it.",
@@ -90,8 +90,8 @@ class DummyEmptyDiagnosticsRule(Rule):
 
     def build_exception(
         self, value: Any, value_name: str = "value", context: str = ""
-    ) -> ValidateError:
-        return ValidateError(
+    ) -> ValidationError:
+        return ValidationError(
             problem="",  # Empty text -> diagnostic card violation
             expected="",
             how_to_fix="",
@@ -141,8 +141,8 @@ def test_assert_rule_build_exception_transforming_rule_passes_when_check_value_d
 
 
 def test_assert_rule_build_exception_fails_on_non_validate_error(subtests):
-    """Verify failure when build_exception does not return a ValidateError."""
-    rule = DummyNonValidateErrorRule()
+    """Verify failure when build_exception does not return a ValidationError."""
+    rule = DummyNonValidationErrorRule()
     with pytest.raises((AssertionError, Failed)):
         assert_rule_build_exception(
             subtests,

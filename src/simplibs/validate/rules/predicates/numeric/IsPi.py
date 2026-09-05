@@ -3,7 +3,7 @@ import math
 from decimal import Decimal
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 from .._init_validators import raise_param_not_non_negative_integer_error
 # Inners
 from .IsInteger import is_non_negative_integer
@@ -87,7 +87,7 @@ class IsPi(Rule):
             expected = f"{self._rounded_pi!r} (math.pi to {self.decimal_places} decimals)"
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="IS_PI_ERROR",
             label=value_name,
             expected=expected,

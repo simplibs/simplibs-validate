@@ -9,7 +9,7 @@ from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
 
 # Exceptions
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 
 # Rules
 from simplibs.validate.rules.predicates.arithmetic import CloseTo
@@ -53,7 +53,7 @@ def test_close_to_value_out_of_tolerance_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(105.0, Kwargs(value_name="measurement")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="measurement",
         value=105.0,
         error_name="CLOSE_TO_ERROR",
@@ -73,7 +73,7 @@ def test_close_to_abs_tolerance_exception_formatting(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(11.0, Kwargs(value_name="weight")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="weight",
         value=11.0,
         error_name="CLOSE_TO_ERROR",
@@ -93,7 +93,7 @@ def test_close_to_type_error_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("3.14", Kwargs(value_name="pi_val")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="pi_val",
         value="3.14",
         error_name="CLOSE_TO_ERROR",

@@ -1,6 +1,6 @@
 from typing import Any
 # Outers
-from ...exceptions import ValidateError
+from ...exceptions import ValidationError
 from ..base_class import Rule
 # Inners
 from ._helpers import as_predicate, describe_rule
@@ -66,7 +66,7 @@ class AnyOf(Rule):
         descriptions = ", ".join(describe_rule(rule) for rule in self.rules)
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="ANY_OF_ERROR",
             label=value_name,
             expected=f"value satisfying at least one of: {descriptions}",

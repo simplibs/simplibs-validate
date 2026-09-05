@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.introspection import IsCallable
 
 
@@ -43,7 +43,7 @@ def test_is_callable_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("not_callable", Kwargs(value_name="callback")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="callback",
         value="not_callable",
         error_name="IS_CALLABLE_ERROR",

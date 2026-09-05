@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.comparisons import InRange
 
 
@@ -44,7 +44,7 @@ def test_in_range_out_of_bounds_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(25, Kwargs(value_name="score")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="score",
         value=25,
         error_name="IN_RANGE_ERROR",
@@ -64,7 +64,7 @@ def test_in_range_incomparable_type_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("text", Kwargs(value_name="count")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="count",
         value="text",
         error_name="IN_RANGE_ERROR",

@@ -1,7 +1,7 @@
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 from .._init_validators import raise_param_missing_error
 
 
@@ -69,7 +69,7 @@ class HasKeys(Rule):
             exception_type = KeyError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="HAS_KEYS_ERROR",
             label=value_name,
             expected=f"mapping with keys {self.keys!r}",

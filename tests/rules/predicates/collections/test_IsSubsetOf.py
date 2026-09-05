@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.collections import IsSubsetOf
 
 
@@ -56,7 +56,7 @@ def test_is_subset_of_extra_elements_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=([1, 2, 99], Kwargs(value_name="selected_ids")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="selected_ids",
         value=[1, 2, 99],
         error_name="IS_SUBSET_OF_ERROR",
@@ -76,7 +76,7 @@ def test_is_subset_of_non_iterable_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(50, Kwargs(value_name="input_val")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="input_val",
         value=50,
         error_name="IS_SUBSET_OF_ERROR",
@@ -96,7 +96,7 @@ def test_is_subset_of_unhashable_elements_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=([[1, 2]], Kwargs(value_name="nested_lists")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="nested_lists",
         value=[[1, 2]],
         error_name="IS_SUBSET_OF_ERROR",

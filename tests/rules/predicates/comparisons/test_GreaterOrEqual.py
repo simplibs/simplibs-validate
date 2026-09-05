@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.comparisons import GreaterOrEqual
 
 
@@ -32,7 +32,7 @@ def test_greater_or_equal_out_of_bounds_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(5, Kwargs(value_name="age")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="age",
         value=5,
         error_name="GREATER_OR_EQUAL_ERROR",
@@ -52,7 +52,7 @@ def test_greater_or_equal_incomparable_type_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("text", Kwargs(value_name="age")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="age",
         value="text",
         error_name="GREATER_OR_EQUAL_ERROR",

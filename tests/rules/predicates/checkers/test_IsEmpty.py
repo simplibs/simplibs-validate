@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.checkers import IsEmpty
 
 
@@ -33,7 +33,7 @@ def test_is_empty_non_zero_length_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=([1, 2], Kwargs(value_name="items")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="items",
         value=[1, 2],
         error_name="IS_EMPTY_ERROR",
@@ -53,7 +53,7 @@ def test_is_empty_no_len_support_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(123, Kwargs(value_name="number")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="number",
         value=123,
         error_name="IS_EMPTY_ERROR",

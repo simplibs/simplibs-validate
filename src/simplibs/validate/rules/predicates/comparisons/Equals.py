@@ -1,7 +1,7 @@
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 
 
 class Equals(Rule):
@@ -46,7 +46,7 @@ class Equals(Rule):
         exception_type = ValueError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="EQUALS_ERROR",
             label=value_name,
             expected=f"{self.expected_value!r}",

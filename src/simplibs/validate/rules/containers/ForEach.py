@@ -1,6 +1,6 @@
 from typing import Any, Callable
 # Outers
-from ...exceptions import ValidateError
+from ...exceptions import ValidationError
 from ..base_class import Rule
 from ..predicates.introspection import IsIterable
 # Inners
@@ -73,7 +73,7 @@ class ForEach(Rule):
                 return build_child_exception(self.rule, item, item_name, context)
 
         # 3. Fallback (build exception if all items unexpectedly passed)
-        return ValidateError(
+        return ValidationError(
             error_name="FOR_EACH_UNREACHABLE_ERROR",
             label=value_name,
             expected="iterable with all items passing the rule",

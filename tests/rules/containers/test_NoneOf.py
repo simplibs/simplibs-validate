@@ -8,7 +8,7 @@ from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
 
 # Exceptions
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 
 # Rules
 from simplibs.validate.rules.containers import NoneOf
@@ -52,7 +52,7 @@ def test_none_of_single_matched_rule_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(0, Kwargs(value_name="status_code")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="status_code",
         value=0,
         error_name="NONE_OF_ERROR",
@@ -73,7 +73,7 @@ def test_none_of_multiple_matched_rules_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(0, Kwargs(value_name="count")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="count",
         value=0,
         error_name="NONE_OF_ERROR",

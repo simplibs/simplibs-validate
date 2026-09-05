@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.logic import Is
 
 
@@ -35,7 +35,7 @@ def test_is_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("not_none", Kwargs(value_name="state")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="state",
         value="not_none",
         error_name="IS_ERROR",

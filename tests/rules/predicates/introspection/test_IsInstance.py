@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.introspection import IsInstance
 
 
@@ -37,7 +37,7 @@ def test_is_instance_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("text", Kwargs(value_name="amount")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="amount",
         value="text",
         error_name="IS_INSTANCE_ERROR",

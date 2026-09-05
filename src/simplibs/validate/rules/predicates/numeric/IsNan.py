@@ -2,7 +2,7 @@ from typing import Any
 import math
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 
 
 class IsNan(Rule):
@@ -57,7 +57,7 @@ class IsNan(Rule):
             expected = "float('nan')"
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="IS_NAN_ERROR",
             label=value_name,
             expected=expected,

@@ -43,7 +43,7 @@ representations suitable for exception messages, assertion output, and logging.
 
 ## 2. Benefits for Exception Diagnostics
 
-1. **Test Stability:** Prevents flaky unit tests when asserting exact `ValidateError`
+1. **Test Stability:** Prevents flaky unit tests when asserting exact `ValidationError`
    messages containing set parameters.
 2. **Aggregated Logging:** Ensures error logs remain identical across worker
    processes and distributed instances, improving log grouping and trace analysis.

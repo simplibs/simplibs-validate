@@ -4,7 +4,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.strings import Contains
 
 
@@ -37,7 +37,7 @@ def test_contains_exception_type_error(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(12345, Kwargs(value_name="email")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="email",
         value=12345,
         error_name="CONTAINS_ERROR",
@@ -57,7 +57,7 @@ def test_contains_exception_value_error(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("user.domain.com", Kwargs(value_name="email")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="email",
         value="user.domain.com",
         error_name="CONTAINS_ERROR",

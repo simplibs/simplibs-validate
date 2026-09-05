@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.checkers import IsTrue
 
 
@@ -33,7 +33,7 @@ def test_is_true_exception_details(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(1, Kwargs(value_name="is_active")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="is_active",
         value=1,
         error_name="IS_TRUE_ERROR",

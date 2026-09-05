@@ -8,7 +8,7 @@ from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
 
 # Exceptions
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 
 # Rules
 from simplibs.validate.rules.predicates.arithmetic import HasRemainder
@@ -56,7 +56,7 @@ def test_has_remainder_unexpected_remainder_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(14, Kwargs(value_name="number")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="number",
         value=14,
         error_name="HAS_REMAINDER_ERROR",
@@ -76,7 +76,7 @@ def test_has_remainder_type_error_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("4", Kwargs(value_name="input_val")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="input_val",
         value="4",
         error_name="HAS_REMAINDER_ERROR",

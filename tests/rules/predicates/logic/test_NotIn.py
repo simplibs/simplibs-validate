@@ -9,12 +9,12 @@ from simplibs.exception.testing import (
     Kwargs,
 )
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.logic import NotIn
 
 
 def test_not_in_contract(subtests):
-    """Verify the complete contract of the NotIn rule."""
+    """Verify the complete contract of the NotIn rule (non-strict mode)."""
     forbidden = ["banned", "suspended"]
     rule = NotIn(forbidden)
 
@@ -34,6 +34,31 @@ def test_not_in_contract(subtests):
     )
 
 
+def test_not_in_strict_mode(subtests):
+    """Verify strict type enforcement for bool vs int distinction in negative checks."""
+    forbidden = [1, 0]
+
+    non_strict_rule = NotIn(forbidden, strict=False)
+    strict_rule = NotIn(forbidden, strict=True)
+
+    with subtests.test("Non-strict rejects True for 1 and False for 0"):
+        assert non_strict_rule.is_valid(1) is False
+        assert non_strict_rule.is_valid(True) is False
+        assert non_strict_rule.is_valid(0) is False
+        assert non_strict_rule.is_valid(False) is False
+
+    with subtests.test("Strict mode allows True when 1 is forbidden and False when 0 is forbidden"):
+        assert strict_rule.is_valid(1) is False
+        assert strict_rule.is_valid(0) is False
+        assert strict_rule.is_valid(True) is True
+        assert strict_rule.is_valid(False) is True
+
+    with subtests.test("Strict mode rejects True when True is explicitly forbidden"):
+        bool_strict_rule = NotIn([True], strict=True)
+        assert bool_strict_rule.is_valid(True) is False
+        assert bool_strict_rule.is_valid(1) is True
+
+
 def test_not_in_exception_value_present(subtests):
     """Verify diagnosis (ValueError) when value is found in forbidden collection."""
     forbidden = ["admin", "root"]
@@ -43,7 +68,7 @@ def test_not_in_exception_value_present(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("admin", Kwargs(value_name="username")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="username",
         value="admin",
         error_name="NOT_IN_ERROR",

@@ -1,6 +1,6 @@
 from typing import Any
 # Outers
-from ...exceptions import ValidateError
+from ...exceptions import ValidationError
 from ..base_class import Rule
 # Inners
 from ._helpers import as_predicate, describe_rule
@@ -60,7 +60,7 @@ class NoneOf(Rule):
         matched_desc = ", ".join(matched) if matched else "one or more rules"
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="NONE_OF_ERROR",
             label=value_name,
             expected=f"value satisfying none of: {all_rules_desc}",

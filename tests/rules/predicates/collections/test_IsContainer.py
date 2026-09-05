@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.collections.IsContainer import IsContainer, is_container
 
 
@@ -56,7 +56,7 @@ def test_is_container_exception_details(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("text_value", Kwargs(value_name="payload")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="payload",
         value="text_value",
         error_name="IS_CONTAINER_ERROR",

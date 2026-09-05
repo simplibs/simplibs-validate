@@ -1,6 +1,6 @@
 from typing import Any
 # Outers
-from ...exceptions import ValidateError
+from ...exceptions import ValidationError
 from ..base_class import Rule
 # Inners
 from ._helpers import as_predicate, build_child_exception
@@ -68,7 +68,7 @@ class AllOf(Rule):
                 return build_child_exception(rule, value, value_name, context)
 
         # 2. Fallback (build exception if all rules unexpectedly passed)
-        return ValidateError(
+        return ValidationError(
             error_name="ALL_OF_UNREACHABLE_ERROR",
             label=value_name,
             expected="value satisfying all rules",

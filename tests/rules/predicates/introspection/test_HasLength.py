@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.introspection import HasLength
 
 
@@ -66,7 +66,7 @@ def test_has_length_value_out_of_bounds_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("hi", Kwargs(value_name="username")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="username",
         value="hi",
         error_name="HAS_LENGTH_ERROR",
@@ -86,7 +86,7 @@ def test_has_length_non_sized_type_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(12345, Kwargs(value_name="user_id")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="user_id",
         value=12345,
         error_name="HAS_LENGTH_ERROR",

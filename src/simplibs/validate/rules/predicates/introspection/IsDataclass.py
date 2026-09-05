@@ -2,7 +2,7 @@ from typing import Any
 import dataclasses
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 
 
 class IsDataclass(Rule):
@@ -41,7 +41,7 @@ class IsDataclass(Rule):
         exception_type = TypeError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="IS_DATACLASS_ERROR",
             label=value_name,
             expected="dataclass instance or type",

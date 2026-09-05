@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.collections import IsSupersetOf
 
 
@@ -56,7 +56,7 @@ def test_is_superset_of_missing_elements_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(["read"], Kwargs(value_name="permissions")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="permissions",
         value=["read"],
         error_name="IS_SUPERSET_OF_ERROR",
@@ -76,7 +76,7 @@ def test_is_superset_of_non_iterable_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(100, Kwargs(value_name="raw_val")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="raw_val",
         value=100,
         error_name="IS_SUPERSET_OF_ERROR",
@@ -96,7 +96,7 @@ def test_is_superset_of_unhashable_elements_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=([[1, 2]], Kwargs(value_name="nested")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="nested",
         value=[[1, 2]],
         error_name="IS_SUPERSET_OF_ERROR",

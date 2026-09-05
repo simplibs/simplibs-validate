@@ -6,7 +6,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.numeric import IsPi
 
 
@@ -40,7 +40,7 @@ def test_is_pi_exception_type_error(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("3.1416", Kwargs(value_name="pi_val")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="pi_val",
         value="3.1416",
         error_name="IS_PI_ERROR",
@@ -60,7 +60,7 @@ def test_is_pi_exception_value_error(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(3.55, Kwargs(value_name="pi_val")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="pi_val",
         value=3.55,
         error_name="IS_PI_ERROR",

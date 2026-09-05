@@ -2,7 +2,7 @@ from typing import Any
 from decimal import Decimal
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 # Inners
 from .IsNumber import is_number
 
@@ -60,7 +60,7 @@ class IsZero(Rule):
             expected = "zero"
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="IS_ZERO_ERROR",
             label=value_name,
             expected=expected,

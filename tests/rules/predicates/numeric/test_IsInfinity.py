@@ -4,7 +4,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.numeric import IsInfinity
 
 
@@ -32,7 +32,7 @@ def test_is_infinity_exception_type_error(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("inf", Kwargs(value_name="bound")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="bound",
         value="inf",
         error_name="IS_INFINITY_ERROR",
@@ -52,7 +52,7 @@ def test_is_infinity_exception_value_error(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(12.34, Kwargs(value_name="limit")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="limit",
         value=12.34,
         error_name="IS_INFINITY_ERROR",

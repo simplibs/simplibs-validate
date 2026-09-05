@@ -15,7 +15,7 @@ def raise_invalid(
 
     This function does not evaluate the truthiness of the rule (`is_valid` / callable is not called).
     It serves as a direct shortcut for scenarios where conditional code has already verified a failure,
-    and the sole objective is to construct and raise the corresponding `ValidateError`.
+    and the sole objective is to construct and raise the corresponding `ValidationError`.
 
     Args:
         value: The value that failed validation.
@@ -24,7 +24,7 @@ def raise_invalid(
         context: Additional context describing the validation failure.
 
     Raises:
-        ValidateError: Always raises the exception constructed by the rule or fallback factory.
+        ValidationError: Always raises the exception constructed by the rule or fallback factory.
     """
     if isinstance(rule, Rule):
         raise rule.build_exception(

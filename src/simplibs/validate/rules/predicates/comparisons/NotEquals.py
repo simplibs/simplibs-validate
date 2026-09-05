@@ -1,7 +1,7 @@
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 
 
 class NotEquals(Rule):
@@ -46,7 +46,7 @@ class NotEquals(Rule):
         exception_type = ValueError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="NOT_EQUALS_ERROR",
             label=value_name,
             expected=f"value not equal to {self.forbidden!r}",

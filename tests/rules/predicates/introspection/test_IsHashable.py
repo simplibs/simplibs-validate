@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.introspection import IsHashable
 
 
@@ -36,7 +36,7 @@ def test_is_hashable_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=([1, 2, 3], Kwargs(value_name="key")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="key",
         value=[1, 2, 3],
         error_name="IS_HASHABLE_ERROR",

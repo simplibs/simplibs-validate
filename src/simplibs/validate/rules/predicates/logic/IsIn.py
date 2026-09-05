@@ -1,7 +1,8 @@
-from typing import Any, Collection, Container
+from typing import Any, Container
+
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 from ..collections.IsContainer import is_container
 from .._init_validators import raise_param_not_container_error
 from .._helpers import format_container
@@ -15,21 +16,23 @@ class IsIn(Rule):
 
     Example:
         validate(value, IsIn(("draft", "published", "archived")))
+        validate(value, IsIn([1, 2], strict=True))
     """
 
-    __slots__ = ("options",)
+    __slots__ = ("options", "strict")
 
     # ----------------------------------------------------------------------
     # Constructor initialization
     # ----------------------------------------------------------------------
-    def __init__(self, options: Container[Any]) -> None:
+    def __init__(self, options: Container[Any], strict: bool = False) -> None:
 
         # 1. Handle invalid input type error
         if not is_container(options):
             raise_param_not_container_error("IsIn", "options", options)
 
-        # 2. Store the parameter
+        # 2. Store parameters
         self.options = options
+        self.strict = strict
 
     # ----------------------------------------------------------------------
     # Rule definition
@@ -38,9 +41,17 @@ class IsIn(Rule):
 
         # 1. Evaluate membership in the collection
         try:
-            return value in self.options
+            if not self.strict:
+                return value in self.options
 
-        # 2. Fallback for incomparable input
+            # 2. Strict type check (exact type matching alongside value equality)
+            target_type = type(value)
+            return any(
+                type(opt) is target_type and opt == value
+                for opt in self.options
+            )
+
+        # 3. Fallback for incomparable input
         except TypeError:
             return False
 
@@ -64,7 +75,7 @@ class IsIn(Rule):
             # Test whether the value can even be looked up in the collection
             _ = value in self.options
 
-            # 2.1 When the value is lookup-able, but missing from the collection
+            # 2.1 When the value is lookup-able, but missing (or failing strict type comparison)
             problem = f"Value {value!r} is not one of {opts_repr}."
             how_to_fix = f"Provide a value contained in {opts_repr}."
             exception_type = ValueError
@@ -79,7 +90,7 @@ class IsIn(Rule):
             exception_type = TypeError
 
         # 3. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="IS_IN_ERROR",
             label=value_name,
             expected=f"one of {opts_repr}",
@@ -107,6 +118,11 @@ specific set or sequence of allowed options.
   `tuple`, `set`, `frozenset`, `dict`), throwing `ParamError` for
   non-container types (like strings or single integers) to prevent logic
   errors.
+* **Strict Type Enforcement (`strict=True`):**
+  When `strict=False` (default), standard Python membership semantics apply
+  (`True == 1`). When `strict=True`, membership requires both value equality
+  (`==`) and exact type identity (`type(opt) is type(value)`), preventing cross-type
+  matches like `True` matching `1` in `Literal` type validation.
 * **TypeError Safety (`is_valid`):**
   Uses a `try/except TypeError` block to cleanly handle cases where
   unhashable objects are searched inside sets/dicts or incomparable

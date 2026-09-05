@@ -2,10 +2,10 @@ from .ValidateError import ValidateError
 
 
 class ParamError(ValidateError):
-    """Exception raised for invalid parameter configuration in a rule's `__init__`.
+    """Exception raised for invalid parameter or decorator configuration.
 
-    Signals a developer error made while constructing validation rules, as
-    opposed to a regular `ValidateError`, which signals invalid input data.
+    Signals a developer error made while constructing validation rules or configuring
+    decorators, as opposed to a `ValidationError`, which signals invalid input data.
     """
 
     pass
@@ -16,18 +16,16 @@ _DESIGN_NOTES = """
 
 ## Purpose
 The `ParamError` class is used to catch and format errors that arise from
-passing invalid parameters into the constructors (`__init__`) of rule
-classes. It inherits directly from `ValidateError`.
+invalid decorator configuration or passing invalid parameters into rule constructors.
+It inherits directly from `ValidateError`.
 
 ---
 
 ## 1. Architectural Role
 
 * **Inheritance from `ValidateError`:**
-  Inherits the full diagnostic card behavior of `SimpleException`, including
-  automatic skipping of the library's internal frames (`skip_locations`).
+  Inherits stack-frame filtering and diagnostic card generation from `ValidateError`.
 * **Semantic Distinction:**
-  Lets advanced users or test suites explicitly catch rule-configuration
-  errors (`except ParamError`) separately from data errors
-  (`except ValidateError`).
+  Lets users catch configuration errors (`except ParamError`) separately from data
+  validation errors (`except ValidationError`).
 """

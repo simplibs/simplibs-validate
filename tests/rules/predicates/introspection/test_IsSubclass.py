@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.introspection import IsSubclass
 
 
@@ -45,7 +45,7 @@ def test_is_subclass_exception_instance_input(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(instance, Kwargs(value_name="cls_type")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="cls_type",
         value=instance,
         error_name="IS_SUBCLASS_ERROR",
@@ -65,7 +65,7 @@ def test_is_subclass_exception_wrong_class(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(int, Kwargs(value_name="cls_type")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="cls_type",
         value=int,
         error_name="IS_SUBCLASS_ERROR",

@@ -9,7 +9,7 @@ _DESIGN_NOTES = """
 
 ## Purpose
 Guard functions used by container rule constructors (`__init__`) to
-fail-fast on invalid configuration, raising structured `ValidateError` or
+fail-fast on invalid configuration, raising structured `ValidationError` or
 `ParamError` diagnostics before an invalid rule instance can be created.
 
 ## Internal Components Registry

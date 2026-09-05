@@ -1,7 +1,7 @@
 from typing import Any, Collection
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 from ..collections.IsContainer import is_container
 from .._init_validators import raise_param_not_container_error
 from .._helpers import format_container
@@ -82,7 +82,7 @@ class IsSubsetOf(Rule):
             exception_type = ValueError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="IS_SUBSET_OF_ERROR",
             label=value_name,
             expected=f"subset of {ref_str}",

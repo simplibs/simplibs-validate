@@ -1,6 +1,6 @@
 from typing import Any, Callable
 # Inners
-from .ValidateError import ValidateError
+from .ValidationError import ValidationError
 
 
 def build_validation_error(
@@ -9,10 +9,10 @@ def build_validation_error(
     value_name: str | None = None,
     context: str | None = None,
 ) -> Exception:
-    """Build a structured `ValidateError` exception for a failed user function or lambda."""
+    """Build a structured `ValidationError` exception for a failed user function or lambda."""
     rule_name = getattr(rule, "__name__", str(rule))
 
-    return ValidateError(
+    return ValidationError(
         error_name="VALIDATION_ERROR",
         label=value_name,
         expected=f"value satisfying callable condition '{rule_name}'",
@@ -30,7 +30,7 @@ _DESIGN_NOTES = """
 # build_validation_error — Exception Factory for User-Defined Rules
 
 ## Purpose
-This function exists solely to build a structured `ValidateError` exception
+This function exists solely to build a structured `ValidationError` exception
 for cases where validation runs through a user-supplied ad-hoc rule (one that
 does not inherit from the `Rule` class). This covers any callable object —
 an anonymous function (`lambda`), a plain function, or an object with a

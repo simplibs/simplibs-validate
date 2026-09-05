@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.collections import AllUnique
 
 
@@ -53,7 +53,7 @@ def test_all_unique_duplicates_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=([1, 2, 2, 3, 1], Kwargs(value_name="numbers")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="numbers",
         value=[1, 2, 2, 3, 1],
         error_name="ALL_UNIQUE_ERROR",
@@ -73,7 +73,7 @@ def test_all_unique_non_iterable_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(42, Kwargs(value_name="payload")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="payload",
         value=42,
         error_name="ALL_UNIQUE_ERROR",

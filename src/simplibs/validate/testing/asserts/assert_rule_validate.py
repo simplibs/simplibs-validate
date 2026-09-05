@@ -1,7 +1,7 @@
 from typing import Any
 from simplibs.exception.testing import assert_function_valid_input, assert_function_raises
 # Outers
-from ...exceptions import ValidateError
+from ...exceptions import ValidationError
 from ...rules.base_class import Rule
 
 
@@ -21,7 +21,7 @@ def assert_rule_validate(
         rule: The Rule instance under test.
         valid_values: Values expected to pass validate() in both standard
             and return_value=True modes.
-        invalid_values: Values expected to raise ValidateError in standard
+        invalid_values: Values expected to raise ValidationError in standard
             mode, and to return False in return_bool=True mode.
         verbose: Enables isolated pytest subtest tracking for each checked value.
         intro: Optional prefix string added to generated subtest identity names.
@@ -44,13 +44,13 @@ def assert_rule_validate(
             intro=f"{intro}test_validate_pass_#index_{index}_",
         )
 
-    # 2. Negative checks (raise ValidateError in standard mode; return False in return_bool mode)
+    # 2. Negative checks (raise ValidationError in standard mode; return False in return_bool mode)
     for index, val in enumerate(invalid_values):
         assert_function_raises(
             subtests,
             rule.validate,
             invalid_params=(val,),
-            exception_type=ValidateError,
+            exception_type=ValidationError,
             verbose=verbose,
             intro=f"{intro}test_validate_raises_#index_{index}_",
         )
@@ -90,7 +90,7 @@ the method-level counterpart to the standalone `validate()` function.
   breaks value passthrough would otherwise go undetected by an `is_valid`
   or `is True` check alone.
 * **Negative Path Coverage:**
-  For every invalid value, confirms `validate(val)` raises `ValidateError`
+  For every invalid value, confirms `validate(val)` raises `ValidationError`
   in standard mode, and confirms `validate(val, return_bool=True) is
   False` — verifying the exception-suppression escape hatch works
   independently of the raising path.
@@ -100,7 +100,7 @@ the method-level counterpart to the standalone `validate()` function.
 ## 2. Scope Boundary
 
 This helper deliberately does not assert on the *content* of the raised
-`ValidateError` (label, problem, how_to_fix, ...) — that is the
+`ValidationError` (label, problem, how_to_fix, ...) — that is the
 responsibility of `assert_rule_build_exception`, since `validate()` and
 `build_exception()` are guaranteed by contract to raise the same
 exception construction path.

@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.checkers import IsNone
 
 
@@ -33,7 +33,7 @@ def test_is_none_exception_details(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("not none", Kwargs(value_name="config")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="config",
         value="not none",
         error_name="IS_NONE_ERROR",

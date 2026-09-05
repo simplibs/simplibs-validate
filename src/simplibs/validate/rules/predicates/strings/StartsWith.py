@@ -1,7 +1,7 @@
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 from .._init_validators import raise_param_not_string_error
 
 
@@ -68,7 +68,7 @@ class StartsWith(Rule):
             exception_type = ValueError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="STARTS_WITH_ERROR",
             label=value_name,
             expected=f"string starting with {self.prefix!r}",

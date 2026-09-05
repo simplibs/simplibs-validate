@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 from _pytest.outcomes import Failed
 
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.base_class import Rule
 from simplibs.validate.testing.asserts.assert_rule_validate import assert_rule_validate
 
@@ -17,7 +17,7 @@ class DummyValidRule(Rule):
         return value == "valid"
 
     def build_exception(self, value: Any, value_name: str = "value", context: str = ""):
-        return ValidateError("Invalid value")
+        return ValidationError("Invalid value")
 
 
 class DummyBadReturnValueRule(Rule):
@@ -31,11 +31,11 @@ class DummyBadReturnValueRule(Rule):
         return value == "valid"
 
     def build_exception(self, value: Any, value_name: str = "value", context: str = ""):
-        return ValidateError("Invalid value")
+        return ValidationError("Invalid value")
 
 
 class DummyNoRaiseOnInvalidRule(Rule):
-    """Rule that fails to raise ValidateError for an invalid value."""
+    """Rule that fails to raise ValidationError for an invalid value."""
     def validate(self, value: Any, return_value: bool = False, return_bool: bool = False) -> Any:
         if not self.is_valid(value) and not return_bool:
             return True  # Returns True instead of raising an exception
@@ -45,7 +45,7 @@ class DummyNoRaiseOnInvalidRule(Rule):
         return value == "valid"
 
     def build_exception(self, value: Any, value_name: str = "value", context: str = ""):
-        return ValidateError("Invalid value")
+        return ValidationError("Invalid value")
 
 
 class DummyBadReturnBoolRule(Rule):
@@ -59,7 +59,7 @@ class DummyBadReturnBoolRule(Rule):
         return value == "valid"
 
     def build_exception(self, value: Any, value_name: str = "value", context: str = ""):
-        return ValidateError("Invalid value")
+        return ValidationError("Invalid value")
 
 
 # --- Tests ---
@@ -89,7 +89,7 @@ def test_assert_rule_validate_fails_on_bad_return_value(subtests):
 
 
 def test_assert_rule_validate_fails_on_missing_exception(subtests):
-    """Verify failure when an invalid value does not trigger ValidateError in standard mode."""
+    """Verify failure when an invalid value does not trigger ValidationError in standard mode."""
     rule = DummyNoRaiseOnInvalidRule()
     with pytest.raises((AssertionError, Failed)):
         assert_rule_validate(

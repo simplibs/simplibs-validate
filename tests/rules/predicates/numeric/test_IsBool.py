@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.numeric import IsBool
 
 
@@ -52,7 +52,7 @@ def test_is_bool_exception_details(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(1, Kwargs(value_name="is_active", context="user_profile")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         error_name="IS_BOOL_ERROR",
         label="is_active",
         expected="a boolean (True or False)",
@@ -67,7 +67,7 @@ def test_is_bool_exception_details(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("True", Kwargs(value_name="flag")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         error_name="IS_BOOL_ERROR",
         label="flag",
         expected="a boolean (True or False)",

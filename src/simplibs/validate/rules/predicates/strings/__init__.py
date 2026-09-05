@@ -5,6 +5,7 @@ from .EndsWith import EndsWith
 from .IsBlank import IsBlank
 from .NotBlank import NotBlank
 from .IsString import IsString
+from .IsSubstringOf import IsSubstringOf
 
 
 _DESIGN_NOTES = """
@@ -17,12 +18,13 @@ and affix checks, and blank/non-blank content checks.
 ## Internal Components Registry
 
 | Component      | Type  | Description                                                              |
-| :-----------------| :---- | :---------------------------------------------------------------------------|
-| `Regex`           | Class | String must match a given regular expression pattern.                   |
-| `Contains`        | Class | String must contain a given substring.                                  |
-| `StartsWith`      | Class | String must start with a given prefix.                                  |
-| `EndsWith`        | Class | String must end with a given suffix.                                    |
-| `IsBlank`         | Class | String must be empty or whitespace-only.                                |
-| `NotBlank`        | Class | String must contain at least one non-whitespace character.              |
-| `IsString`        | Class | Value must be strictly a `str`.              |
+| :------------- | :---- | :----------------------------------------------------------------------- |
+| `Regex`        | Class | String must match a given regular expression pattern.                    |
+| `Contains`     | Class | String must contain a given substring.                                   |
+| `StartsWith`   | Class | String must start with a given prefix.                                   |
+| `EndsWith`     | Class | String must end with a given suffix.                                     |
+| `IsBlank`      | Class | String must be empty or whitespace-only.                                 |
+| `NotBlank`     | Class | String must contain at least one non-whitespace character.               |
+| `IsString`     | Class | Value must be strictly a `str`.                                          |
+| `IsSubstringOf` | Class | String value must be a substring of a target string.                     |
 """

@@ -1,10 +1,11 @@
 """Tests for the assert_rule_raise_invalid function."""
 
+import sys
 from typing import Any
 import pytest
 from _pytest.outcomes import Failed
 
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.base_class import Rule
 from simplibs.validate.testing.asserts.assert_rule_raise_invalid import (
     assert_rule_raise_invalid,
@@ -20,8 +21,8 @@ class DummyValidRule(Rule):
 
     def build_exception(
         self, value: Any, value_name: str = "value", context: str = ""
-    ) -> ValidateError:
-        return ValidateError(
+    ) -> ValidationError:
+        return ValidationError(
             problem="Value is invalid",
             expected="Value must be valid",
             how_to_fix="Fix value",
@@ -78,8 +79,10 @@ def test_assert_rule_raise_invalid_fails_when_no_exception_raised(subtests, monk
     """Verify failure when raise_invalid fails to raise any exception."""
     rule = DummyValidRule()
 
-    # Simulate situation where raise_invalid does not raise an exception
-    import simplibs.validate.testing.asserts.assert_rule_raise_invalid as target_module
+    # Získáme přímo objekt modulu ze sys.modules, čímž obcházíme re-exportovanou funkci v __init__.py
+    target_module_name = assert_rule_raise_invalid.__module__
+    target_module = sys.modules[target_module_name]
+
     monkeypatch.setattr(target_module, "raise_invalid", lambda val, r: None)
 
     with pytest.raises((AssertionError, Failed)):

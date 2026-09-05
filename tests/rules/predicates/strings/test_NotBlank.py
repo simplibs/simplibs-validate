@@ -4,7 +4,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.strings import NotBlank
 
 
@@ -31,7 +31,7 @@ def test_not_blank_exception_type_error(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(None, Kwargs(value_name="code")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="code",
         value=None,
         error_name="NOT_BLANK_ERROR",
@@ -51,7 +51,7 @@ def test_not_blank_exception_value_error(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("   ", Kwargs(value_name="code")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="code",
         value="   ",
         error_name="NOT_BLANK_ERROR",

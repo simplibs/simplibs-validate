@@ -1,7 +1,7 @@
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 from .._init_validators import (
     raise_param_min_max_bounds_inverted_error,
     raise_param_min_max_incomparable_error
@@ -117,7 +117,7 @@ class InRange(Rule):
             exception_type = TypeError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="IN_RANGE_ERROR",
             label=value_name,
             expected=f"value in range {self.min_val!r} to {self.max_val!r}",

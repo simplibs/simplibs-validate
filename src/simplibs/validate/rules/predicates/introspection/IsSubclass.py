@@ -1,7 +1,7 @@
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 from .._init_validators import (
     raise_param_missing_error,
     raise_param_not_type_error
@@ -76,7 +76,7 @@ class IsSubclass(Rule):
         exception_type = TypeError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="IS_SUBCLASS_ERROR",
             label=value_name,
             expected=expected,

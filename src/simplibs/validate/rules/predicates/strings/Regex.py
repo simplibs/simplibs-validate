@@ -2,7 +2,7 @@ import re
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 from .._init_validators import (
     raise_param_not_string_error,
     raise_regex_param_invalid_pattern_error
@@ -78,7 +78,7 @@ class Regex(Rule):
             exception_type = ValueError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="REGEX_ERROR",
             label=value_name,
             expected=f"string matching pattern /{self.pattern}/",

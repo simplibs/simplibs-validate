@@ -5,7 +5,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.collections import HasKey
 
 
@@ -52,7 +52,7 @@ def test_has_key_missing_key_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=({"username": "john_doe"}, Kwargs(value_name="user")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="user",
         value={"username": "john_doe"},
         error_name="HAS_KEY_ERROR",
@@ -72,7 +72,7 @@ def test_has_key_unsupported_lookup_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(100, Kwargs(value_name="data")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="data",
         value=100,
         error_name="HAS_KEY_ERROR",

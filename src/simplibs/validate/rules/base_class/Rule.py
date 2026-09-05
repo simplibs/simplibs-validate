@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable
+from typing import Any, Callable, Annotated
 
 
 class Rule(ABC):
     """Abstract base class for all validation rules.
 
     Every concrete rule inherits from this class and implements `is_valid` and `build_exception`.
-    The class also provides a unified evaluation interface via `validate` and the magic `__call__` method.
+    The class also provides a unified evaluation interface via `validate`, the magic `__call__` method,
+    and Python typing integration via `annotated`.
     """
 
     # ----------------------------------------------------------------------
@@ -85,7 +86,25 @@ class Rule(ABC):
         )
 
     # ----------------------------------------------------------------------
-    # 3) Operator-Based Composition (|, &, ~)
+    # 3) Typing Integration
+    # ----------------------------------------------------------------------
+
+    def annotated(self, type_: type) -> Any:
+        """Wrap this rule as `typing.Annotated[type_, self]` for type hints.
+
+        Enables seamless integration with static type checkers (MyPy, Pyright)
+        and runtime annotation inspection (e.g., IsTyping or decorator engines).
+
+        Args:
+            type_: The target base type (e.g., int, str, float).
+
+        Returns:
+            An `Annotated` type hint combining the base type and this rule as metadata.
+        """
+        return Annotated[type_, self]
+
+    # ----------------------------------------------------------------------
+    # 4) Operator-Based Composition (|, &, ~)
     # ----------------------------------------------------------------------
 
     def __or__(self, other: "Rule | Callable[[Any], bool]") -> "Rule":
@@ -142,8 +161,8 @@ _DESIGN_NOTES = """
 ## Purpose
 The `Rule` class serves as the fundamental pillar of the entire
 `simplibs-validate` library. It defines a standardized interface for
-evaluating conditions and assembling structured exceptions
-(`SimpleException`).
+evaluating conditions, assembling structured exceptions (`SimpleException`),
+and bridging validation rules with Python's typing system.
 
 ---
 
@@ -156,14 +175,12 @@ evaluating conditions and assembling structured exceptions
 * **`None` Value Handling:** The rule itself does not special-case `None`.
   If `None` needs to be treated as a valid value, compose it explicitly
   with `IsNone` (e.g. `rule | IsNone()`) rather than relying on a global
-  flag — see the "Removed `accept_none`" note in `validate()`'s design
-  notes for the full rationale.
+  flag.
 
 ### Zero Import-Time Overhead
-* Unnecessary metaclass inspection routines (`__init_subclass__` docstring
-  regexes) have been removed in accordance with the **Programmer's Zen**
-  philosophy. Documentation and usage examples are audited via automated
-  unit tests rather than import-time hooks.
+* Unnecessary metaclass inspection routines have been removed in accordance with
+  the **Programmer's Zen** philosophy. Documentation and usage examples are
+  audited via automated unit tests rather than import-time hooks.
 
 ---
 
@@ -186,80 +203,78 @@ evaluating conditions and assembling structured exceptions
   rule = IS_INTEGER()
   if rule(5):
       ...
-  ```
+
+```
 
 ### `validate(value, ...)`
+
 * Primary evaluation method offering a flexible return interface:
-  1. Value passes & `return_value=True` → returns `value`.
-  2. Value passes & `return_value=False` → returns `True`.
-  3. Value fails & `return_bool=True` → returns `False`.
-  4. Value fails & `return_bool=False` → raises exception from
-     `build_exception(...)`.
+1. Value passes & `return_value=True` → returns `value`.
+2. Value passes & `return_value=False` → returns `True`.
+3. Value fails & `return_bool=True` → returns `False`.
+4. Value fails & `return_bool=False` → raises exception from
+`build_exception(...)`.
+
+
 
 ---
 
-## 3. Operator-Based Composition (`|`, `&`, `~`)
+## 3. Typing System Integration (`annotated`)
 
-### Why These Three, and Not `and`/`or`/`not`/`all`/`any`
-* Python's `and`, `or`, and `not` keywords cannot be overloaded — they
-  always resolve through truthiness (`__bool__`) and always return one of
-  the original operands (or `True`/`False`), never a custom object. There
-  is no way to make `rule1 or rule2` return an `AnyOf(...)` instance.
-* `all()`/`any()` operate over an iterable of already-evaluated truthy
-  values, not over `Rule` objects themselves. Giving `Rule` a `__bool__`
-  so that `any([rule1, rule2])` "worked" would be actively misleading — a
-  `Rule` has no truth value of its own until it is evaluated against a
-  concrete `value`. The existing usage inside container rules, e.g.
-  `any(as_predicate(rule)(value) for rule in rules)`, is `any()` over
-  *evaluation results*, which is the correct and only sensible use.
-* `|`, `&`, and `~` are the operators Python actually allows to be
-  overloaded for this purpose, and match an established convention for
-  composable predicate/filter objects (e.g. Django's `Q() | Q()`,
-  pandas boolean masks).
+### Purpose & Syntax Sugar
+
+The `annotated(type_)` method bridges runtime validation rules directly into
+Python's standard type annotation machinery via `typing.Annotated` (PEP 593).
+
+```python
+my_rule = is_integer & greater_than(0)
+
+# Enables clean, fluent type definitions:
+PositiveInt = my_rule.annotated(int)
+
+def process_age(age: PositiveInt) -> None:
+    ...
+
+```
+
+### Static vs. Runtime Dual-Benefit
+
+* **Static Type Checkers (MyPy / Pyright / IDEs):** Treat `Annotated[T, metadata]`
+transparently as `T`. Code passes type checking seamlessly as if plain `int`
+or `str` was used.
+* **Runtime Ecosystem (IsTyping & Decorators):** Inspection engines unpack
+`Annotated` via `get_origin` and `get_args`, extracting `self` (the `Rule` instance)
+from metadata to enforce validation rules dynamically.
+
+---
+
+## 4. Operator-Based Composition (`|`, `&`, `~`)
+
+### Why These Three, and Not `and`/`or`/`not`
+
+* Python's `and`, `or`, and `not` keywords cannot be overloaded.
+* `|`, `&`, and `~` are the standard operators Python allows to be overloaded
+for composable predicate objects.
 
 ### What Each Operator Does
+
 * **`rule1 | rule2`** (`__or__` / `__ror__`) → `AnyOf(rule1, rule2)`.
 * **`rule1 & rule2`** (`__and__` / `__rand__`) → `AllOf(rule1, rule2)`.
 * **`~rule`** (`__invert__`) → `Not(rule)`.
 
 ### Design Choices
-* **Lazy Imports:** `AnyOf`, `AllOf`, and `Not` live in
-  `rules.containers`, which itself imports `Rule` from `base_class` — a
-  module-level import here would create a circular import. Each operator
-  method imports its target container lazily, inside the method body, so
-  the cost (and the cycle) only exists at the moment an operator is
-  actually used, consistent with this class's "Zero Import-Time Overhead"
-  principle above.
-* **`NotImplemented`, Not a Raised Error:** Every binary operator returns
-  `NotImplemented` (not `False`, not an exception) when `other` is neither
-  a `Rule` nor a plain callable. This lets Python fall back to `other`'s
-  own reflected method, or raise a standard `TypeError` if neither side
-  can handle it — the normal, expected Python protocol for operator
-  overloading, rather than a `simplibs-validate`-specific error.
-* **Reflected Methods (`__ror__`, `__rand__`) Matter:**
-  Plain functions and lambdas have no `__or__`/`__and__` of their own, so
-  an expression like `some_lambda | rule` only works because Python falls
-  back to `rule.__ror__(some_lambda)`. Both directions are implemented so
-  composition reads naturally regardless of which operand is the `Rule`.
-* **Flattening Lives in the Containers, Not Here:**
-  Chaining, e.g. `a | b | c`, evaluates left-to-right as
-  `(a | b) | c`, which would naively nest as `AnyOf(AnyOf(a, b), c)`.
-  Rather than special-casing that here, `AnyOf`/`AllOf` flatten
-  same-type nested instances in their own constructors — see their design
-  notes — so this stays a pure one-line delegation.
-* **Compatible With Future Zero-Arg Instances:**
-  This design composes equally well whether both sides are already-built
-  `Rule` instances (`IsInteger() | IsNone()`) or, per a planned future
-  change, pre-instantiated zero-parameter singletons exposed at module
-  level (`is_instance(int) | is_none`) — operator resolution only cares
-  that each operand is a `Rule` (or callable), not how it was constructed.
+
+* **Lazy Imports:** Container imports (`AnyOf`, `AllOf`, `Not`) are deferred inside
+method bodies to prevent circular import issues.
+* **`NotImplemented` Fallback:** Binary operators return `NotImplemented` for unsupported
+types, allowing Python's standard reflected operator protocols to execute naturally.
 
 ---
 
-## 4. Ecosystem Integration
+## 5. Ecosystem Integration
 
-* **`simplibs-exception`:** `build_exception` utilizes `value_name` as
-  `label`, `context`, and `value` to format readable diagnostic cards.
-* **`validate()` Standalone Function:** Delegates execution to
-  `rule.validate()` or handles callable fallbacks seamlessly.
+* **`simplibs-exception`:** `build_exception` utilizes `value_name` as `label`,
+`context`, and `value` to format readable diagnostic cards.
+* **`IsTyping` & `annotated_builder`:** Automatically extracts `Rule` instances attached
+via `.annotated()` to decompose typing constructs into composed validation trees.
 """

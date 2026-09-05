@@ -1,7 +1,7 @@
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 from ..numeric.IsInteger import is_integer
 from .._init_validators import (
     validate_param_is_integer,
@@ -90,7 +90,7 @@ class HasRemainder(Rule):
             exception_type = ValueError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="HAS_REMAINDER_ERROR",
             label=value_name,
             expected=f"remainder {self.remainder} when divided by {self.divisor}",

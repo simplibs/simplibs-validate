@@ -8,7 +8,7 @@ from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
 
 # Exceptions
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 
 # Rules
 from simplibs.validate.rules.containers import AllOf
@@ -52,7 +52,7 @@ def test_all_of_delegates_child_exception_details(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("abc", Kwargs(value_name="age")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="age",
         expected="an integer",
         problem="is not an integer",
@@ -64,7 +64,7 @@ def test_all_of_delegates_child_exception_details(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(-5, Kwargs(value_name="score")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="score",
         expected="greater than 0",
         verbose=False,

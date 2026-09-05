@@ -4,7 +4,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.strings import EndsWith
 
 
@@ -37,7 +37,7 @@ def test_ends_with_exception_type_error(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(None, Kwargs(value_name="filename")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="filename",
         value=None,
         error_name="ENDS_WITH_ERROR",
@@ -57,7 +57,7 @@ def test_ends_with_exception_value_error(subtests):
         subtests,
         func=rule.validate,
         invalid_params=("document.txt", Kwargs(value_name="filename")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="filename",
         value="document.txt",
         error_name="ENDS_WITH_ERROR",

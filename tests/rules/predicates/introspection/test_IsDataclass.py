@@ -6,7 +6,7 @@ import pytest
 
 from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 from simplibs.validate.rules.predicates.introspection import IsDataclass
 
 
@@ -43,7 +43,7 @@ def test_is_dataclass_exception(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(123, Kwargs(value_name="config")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="config",
         value=123,
         error_name="IS_DATACLASS_ERROR",

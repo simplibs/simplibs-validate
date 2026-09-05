@@ -8,7 +8,7 @@ from simplibs.exception.testing import assert_exception_function, Kwargs
 from simplibs.validate.testing import assert_rule_contract
 
 # Exceptions
-from simplibs.validate.exceptions import ValidateError
+from simplibs.validate.exceptions import ValidationError
 
 # Rules
 from simplibs.validate.rules.containers import Not
@@ -54,7 +54,7 @@ def test_not_exception_details(subtests):
         subtests,
         func=rule.validate,
         invalid_params=(0, Kwargs(value_name="counter")),
-        exception_type=ValidateError,
+        exception_type=ValidationError,
         label="counter",
         value=0,
         error_name="NOT_RULE_ERROR",

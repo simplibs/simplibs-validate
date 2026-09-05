@@ -1,5 +1,6 @@
-"""Tests for the base Rule abstraction and its operator composition."""
+"""Tests for the base Rule abstraction, typing integration, and operator composition."""
 
+from typing import Annotated, get_args, get_origin
 import pytest
 from simplibs.validate.rules.base_class import Rule
 from simplibs.validate.rules.containers.AllOf import AllOf
@@ -85,7 +86,36 @@ def test_rule_validate_failure_return_bool() -> None:
 
 
 # ==============================================================================
-# 2. OPERATOR COMPOSITION TESTS (|, &, ~)
+# 2. TYPING INTEGRATION TESTS (.annotated())
+# ==============================================================================
+
+def test_rule_annotated_method(subtests) -> None:
+    """Verify functionality of the .annotated() method for typing integration."""
+    rule = DummyPassRule()
+
+    with subtests.test("returns correct Annotated structure"):
+        annotated_type = rule.annotated(int)
+        assert get_origin(annotated_type) is Annotated
+
+        args = get_args(annotated_type)
+        assert args[0] is int
+        assert args[1] is rule
+
+    with subtests.test("works with complex composition"):
+        pass_rule = DummyPassRule()
+        fail_rule = DummyFailRule()
+        composed_rule = pass_rule & ~fail_rule
+
+        annotated_str = composed_rule.annotated(str)
+        assert get_origin(annotated_str) is Annotated
+
+        args = get_args(annotated_str)
+        assert args[0] is str
+        assert args[1] is composed_rule
+
+
+# ==============================================================================
+# 3. OPERATOR COMPOSITION TESTS (|, &, ~)
 # ==============================================================================
 
 def test_rule_operator_or(subtests) -> None:

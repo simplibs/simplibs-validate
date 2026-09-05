@@ -1,7 +1,7 @@
 from typing import Any
 # Outers
 from ...base_class import Rule
-from ....exceptions import ValidateError
+from ....exceptions import ValidationError
 
 
 class IsPrimitiveNumber(Rule):
@@ -43,7 +43,7 @@ class IsPrimitiveNumber(Rule):
         exception_type = TypeError
 
         # 2. Build the exception
-        return ValidateError(
+        return ValidationError(
             error_name="IS_PRIMITIVE_NUMBER_ERROR",
             label=value_name,
             expected="a primitive number (int or float)",
