@@ -1,7 +1,9 @@
 import pytest
+
+# Tested decorator and exceptions
 from simplibs.validate.exceptions import ParamError, ValidationError
-from simplibs.validate.rules import IsInstance
-from simplibs.validate.tools.validate_call import validate_call
+from simplibs.validate.rules import greater_than
+from simplibs.validate.tools.validate_call.validate_call import validate_call
 
 
 # ============================================================================
@@ -9,7 +11,7 @@ from simplibs.validate.tools.validate_call import validate_call
 # ============================================================================
 
 def test_validate_call_bare_decorator_success() -> None:
-    """Verify bare @validate_call validates arguments on sync functions."""
+    """Verify bare @validate_call passes valid arguments on sync functions."""
 
     @validate_call
     def add(a: int, b: int) -> int:
@@ -44,9 +46,9 @@ def test_validate_call_with_check_filter() -> None:
 
 
 def test_validate_call_with_overrides() -> None:
-    """Verify overrides add custom validation logic to annotated or unannotated params."""
+    """Verify overrides add custom validation logic to parameters."""
 
-    @validate_call(overrides={"b": lambda x: x > 0})
+    @validate_call(overrides={"b": greater_than(0)})
     def divide(a: int, b) -> float:
         return a / b
 
@@ -78,7 +80,7 @@ def test_validate_call_sync_return_validation_failure() -> None:
 
 
 def test_validate_call_check_return_missing_annotation_raises() -> None:
-    """Verify ParamError is raised at decoration time when check_return=True lacks annotation."""
+    """Verify ParamError is raised at decoration time when check_return=True lacks return annotation."""
 
     with pytest.raises(ParamError) as exc_info:
 
@@ -87,6 +89,22 @@ def test_validate_call_check_return_missing_annotation_raises() -> None:
             return a
 
     assert exc_info.value.error_name == "VALIDATE_CALL_NO_RULE_FOR_RETURN_ERROR"
+
+
+def test_validate_call_per_call_bypass_switch() -> None:
+    """Verify reserved 'validate' parameter skips validation when set to False."""
+
+    @validate_call
+    def process(data: int, *, validate: bool = True) -> int:
+        return data
+
+    # Normal execution with validation
+    assert process(10) == 10
+    with pytest.raises(ValidationError):
+        process("not_an_int")
+
+    # Opt-out bypassing validation
+    assert process("not_an_int", validate=False) == "not_an_int"
 
 
 # ============================================================================
@@ -125,9 +143,21 @@ async def test_validate_call_async_return_validation() -> None:
     async def async_fetch(valid: bool) -> str:
         if valid:
             return "data"
-        return 12345  # Type violation
+        return 12345
 
     assert await async_fetch(True) == "data"
 
     with pytest.raises(ValidationError):
         await async_fetch(False)
+
+
+@pytest.mark.asyncio
+async def test_validate_call_async_bypass_switch() -> None:
+    """Verify bypass switch works properly on async functions."""
+
+    @validate_call
+    async def async_process(data: int, *, validate: bool = True) -> int:
+        return data
+
+    assert await async_process(10) == 10
+    assert await async_process("not_an_int", validate=False) == "not_an_int"

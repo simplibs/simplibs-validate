@@ -2,10 +2,12 @@ import inspect
 from typing import Any, Callable
 # Outers
 from ....rules.base_class import Rule
-from ....rules.containers import AllOf, Compose
+from ....rules.containers import AllOf
+from ....rules.predicates.logic import UserRule
 from ....rules.typing import build_typing_rule
-# Inners
 from .._validations import raise_no_rule_for_checked_param
+# Inners
+from .is_bypass_parameter import is_bypass_parameter
 
 
 def compile_parameter_rules(
@@ -49,30 +51,35 @@ def compile_parameter_rules(
     # 2. Iterate through function signature parameters
     for name, param in signature.parameters.items():
 
-        # 2.1 Skip parameters not listed in check filter
+        # 2.1 The reserved "validate" bypass switch is never validated
+        #    itself — see is_bypass_parameter's own design notes
+        if is_bypass_parameter(param):
+            continue
+
+        # 2.2 Skip parameters not listed in check filter
         if check is not None and name not in check:
             continue
 
-        # 2.2 Inspect parameter sources
+        # 2.3 Inspect parameter sources
         has_annotation = param.annotation is not inspect.Parameter.empty
         override = overrides.get(name)
 
-        # 2.3 Handle missing rule sources
+        # 2.4 Handle missing rule sources
         if not has_annotation and override is None:
             if check is not None:
                 raise_no_rule_for_checked_param(func, name)
             continue
 
-        # 2.4 Process type annotation rule
+        # 2.5 Process type annotation rule
         parts: list[Rule] = []
         if has_annotation:
             parts.append(build_typing_rule(param.annotation))
 
-        # 2.5 Process override additions
+        # 2.6 Process override additions — a plain callable is wrapped in UserRule
         if override is not None:
-            parts.append(override if isinstance(override, Rule) else Compose(lambda value: value, override))
+            parts.append(override if isinstance(override, Rule) else UserRule(override))
 
-        # 2.6 Store compiled parameter rule
+        # 2.7 Store compiled parameter rule
         compiled[name] = parts[0] if len(parts) == 1 else AllOf(*parts)
 
     # 3. Return compiled rules dictionary
@@ -107,4 +114,20 @@ This function never calls `func` — it only exists here so
 raise_no_rule_for_checked_param can report a fully qualified, readable
 error message (`func.__qualname__`) rather than a bare parameter name
 with no indication of which function's decoration failed.
+
+---
+
+## 3. A Plain Callable Override Is Always Wrapped in UserRule
+
+Never left as a bare callable inside `parts`, and never wrapped via
+`Compose(lambda value: value, override)` (an earlier, now-corrected
+approach that repurposed Compose's transform-then-validate design for a
+purpose it wasn't built for). A bare callable would technically pass
+is_valid() (AllOf's own as_predicate handles plain callables fine), but
+would break build_exception() the moment that callable failed — AllOf's
+diagnostic delegation calls .build_exception() on the failing part,
+which a plain callable does not have. UserRule exists specifically to
+give an arbitrary callable that missing Rule contract, so failure
+diagnostics work identically whether an override came from a Rule
+instance or a plain predicate function.
 """

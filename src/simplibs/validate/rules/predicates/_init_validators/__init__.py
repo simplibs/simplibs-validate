@@ -1,6 +1,7 @@
 from .rule_errors import (
     raise_has_length_param_conflict_error,
     raise_regex_param_invalid_pattern_error,
+    raise_user_rule_param_wrong_arity,
 )
 from .shared_errors import (
     raise_param_min_max_bounds_inverted_error,
@@ -10,6 +11,7 @@ from .shared_errors import (
     raise_param_not_non_negative_integer_error,
     raise_param_not_string_error,
     raise_param_not_type_error,
+    raise_param_not_callable_error,
 )
 from .shared_validators import (
     validate_param_is_integer,

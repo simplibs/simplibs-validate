@@ -70,6 +70,7 @@ from .predicates.logic import (
     IsIn,
     IsNot,
     NotIn,
+    UserRule,
 )
 
 # Predicates — numeric
@@ -188,7 +189,7 @@ is_same = same_as   = Is                # expected
 is_in               = IsIn              # options
 is_not              = IsNot             # forbidden
 not_in              = NotIn             # options
-
+user_rule           = UserRule          # rule
 
 # ---- predicates/numeric ----------------------------------------------------
 
@@ -286,6 +287,7 @@ rule_class = SimpleNamespace(
     IsIn=IsIn,
     IsNot=IsNot,
     NotIn=NotIn,
+    UserRule=UserRule,
 
     # numeric
     IsBool=IsBool,
@@ -384,6 +386,8 @@ rules = SimpleNamespace(
     is_in=is_in,
     is_not=is_not,
     not_in=not_in,
+    user_rule=user_rule,
+
 
     # numeric
     is_bool=is_bool,
@@ -479,6 +483,7 @@ __all__ = [
     "IsIn",
     "IsNot",
     "NotIn",
+    "UserRule",
 
     # numeric
     "IsBool",
@@ -556,6 +561,7 @@ __all__ = [
     "is_in",
     "is_not",
     "not_in",
+    "user_rule",
     "is_bool",
     "is_decimal",
     "is_float",
@@ -796,13 +802,14 @@ are compound names rather than the keywords themselves.
 
 ### `predicates/logic/`
 
-| Shortcut  | Parameters  | Logic                    |
-|-----------|-------------|--------------------------|
-| `same_as` | `expected`  | `value is expected`      |
-| `is_same` | `expected`  | `value is expected`      |
-| `is_in`   | `options`   | `value in options`       |
-| `is_not`  | `forbidden` | `value is not forbidden` |
-| `not_in`  | `options`   | `value not in options`   |
+| Shortcut    | Parameters  | Logic                                        |
+|-------------|-------------|----------------------------------------------|
+| `same_as`   | `expected`  | `value is expected`                          |
+| `is_same`   | `expected`  | `value is expected`                          |
+| `is_in`     | `options`   | `value in options`                           |
+| `is_not`    | `forbidden` | `value is not forbidden`                     |
+| `not_in`    | `options`   | `value not in options`                       |
+| `user_rule` | `rule`      | `value satisfies arbitrary user predicate`   |
 
 
 ### `predicates/numeric/`

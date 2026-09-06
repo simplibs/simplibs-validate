@@ -4,7 +4,13 @@ from typing import Any, Callable, ParamSpec, TypeVar, overload
 # Outers
 from ...rules.base_class import Rule
 # Inners
-from ._helpers import compile_parameter_rules, compile_return_rule, get_context_string
+from ._helpers import (
+    compile_parameter_rules,
+    compile_return_rule,
+    get_context_string,
+    is_bypass_parameter,
+    should_validate
+)
 # Annotations
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -50,6 +56,13 @@ def validate_call(
     annotation. Unannotated parameters are skipped unless named in
     `overrides`.
 
+    If the function declares a reserved "validate" parameter (bool or
+    unannotated — see is_bypass_parameter), its value at call time
+    controls whether validation runs at all for that call: True (or the
+    parameter's default) validates normally, False skips every check for
+    both parameters and the return value. Functions without such a
+    parameter always validate — this is purely opt-in per function.
+
     Works identically on `async def` functions: parameters are validated
     synchronously before the call, exactly as for a sync function, and
     the return value is validated only after being awaited — never a
@@ -94,6 +107,7 @@ def validate_call(
     compiled = compile_parameter_rules(func, signature, check=check, overrides=overrides or {})
     return_rule = compile_return_rule(func, signature, check_return=check_return)
     context = get_context_string(func)
+    has_bypass = any(is_bypass_parameter(p) for p in signature.parameters.values())
 
     # 3. Async functions need an async wrapper so the return-value rule
     #    validates the awaited result, not a bare coroutine object — see
@@ -106,18 +120,20 @@ def validate_call(
             # 3.1 Bind call arguments to signature
             bound = signature.bind(*args, **kwargs)
             bound.apply_defaults()
+            validate = should_validate(bound, has_bypass=has_bypass)
 
             # 3.2 Validate arguments against parameter rules
-            for name, value in bound.arguments.items():
-                rule = compiled.get(name)
-                if rule is not None:
-                    rule.validate(value, value_name=name, context=context)
+            if validate:
+                for name, value in bound.arguments.items():
+                    rule = compiled.get(name)
+                    if rule is not None:
+                        rule.validate(value, value_name=name, context=context)
 
             # 3.3 Execute target async function
             result = await func(*args, **kwargs)
 
             # 3.4 Validate return value if requested
-            if return_rule is not None:
+            if validate and return_rule is not None:
                 return_rule.validate(result, value_name="return value", context=context)
 
             # 3.5 Return validated result
@@ -132,18 +148,20 @@ def validate_call(
         # 4.1 Bind call arguments to signature
         bound = signature.bind(*args, **kwargs)
         bound.apply_defaults()
+        validate = should_validate(bound, has_bypass=has_bypass)
 
         # 4.2 Validate arguments against parameter rules
-        for name, value in bound.arguments.items():
-            rule = compiled.get(name)
-            if rule is not None:
-                rule.validate(value, value_name=name, context=context)
+        if validate:
+            for name, value in bound.arguments.items():
+                rule = compiled.get(name)
+                if rule is not None:
+                    rule.validate(value, value_name=name, context=context)
 
         # 4.3 Execute target function
         result = func(*args, **kwargs)
 
         # 4.4 Validate return value if requested
-        if return_rule is not None:
+        if validate and return_rule is not None:
             return_rule.validate(result, value_name="return value", context=context)
 
         # 4.5 Return validated result
@@ -174,14 +192,14 @@ entirely to IsTyping's decomposition layer, not to this one.
 
 ---
 
-## 2. All Compilation Logic Lives in Two Dedicated Helpers
+## 2. All Compilation Logic Lives in Dedicated Helpers
 
 `compile_parameter_rules` (per-parameter: annotation + override + `check`
 filtering) and `compile_return_rule` (the single return-value rule +
-`check_return` guard) hold every real decision this decorator makes. This
-file itself contains none of that logic — only the
-`@validate_call`/`@validate_call(...)` dispatch and the wrapper closure
-that calls into both. See each helper's own design notes for its
+`check_return` guard) hold every real decision this decorator makes about
+*what* to validate. This file itself contains none of that logic — only
+the `@validate_call`/`@validate_call(...)` dispatch and the wrapper
+closure that calls into both. See each helper's own design notes for its
 specific rationale; both exist as separate functions (rather than one
 combined helper) because they operate on structurally different inputs
 (a dict of parameters vs. a single return annotation) and have
@@ -192,11 +210,13 @@ independent, differently-shaped return types (`dict[str, Rule]` vs.
 
 ## 3. Compilation Happens Once, at Decoration Time
 
-Both helpers are called exactly once, when `@validate_call` is applied to
-a function — never per call. `wrapper` only ever looks up already-built
-Rule instances and calls `.validate()` on them. This mirrors IsTyping's
-own "decompose once in __init__, delegate on every is_valid()" principle,
-applied one level up.
+Every helper (`compile_parameter_rules`, `compile_return_rule`, and the
+`has_bypass` check) runs exactly once, when `@validate_call` is applied
+to a function — never per call. `wrapper` only ever looks up already-built
+Rule instances, checks the precomputed `has_bypass` flag, and calls
+`.validate()` on what it finds. This mirrors IsTyping's own "decompose
+once in __init__, delegate on every is_valid()" principle, applied one
+level up.
 
 ---
 
@@ -207,6 +227,10 @@ in `bound.arguments` and would silently skip validation — including
 cases where the default itself violates the parameter's own annotation.
 Applying defaults first ensures every parameter with a compiled rule is
 actually checked, regardless of whether the caller supplied it explicitly.
+This also matters for the bypass parameter itself (section 8 below):
+`should_validate` reads its value out of `bound.arguments`, which is only
+guaranteed to hold an entry for it — even when the caller didn't pass it
+explicitly — because defaults were already applied.
 
 ---
 
@@ -264,4 +288,48 @@ differs. This mirrors log_this's identical sync/async branching (see its
 own design notes) and cannot be unified for the same reason: sharing the
 `await` would force the sync branch to become async too, breaking plain
 synchronous callers who never asked to await anything.
+
+---
+
+## 8. The Per-Call Bypass Switch: One Decorator, Not Two
+
+A function may opt in to a reserved "validate" bypass parameter (see
+is_bypass_parameter's own design notes for its detection rules) — when
+present, its value at call time (via `should_validate`) gates both
+parameter and return-value checks for that one call. `has_bypass` is
+computed once per decoration (a single pass over `signature.parameters`,
+no more expensive than the pass compile_parameter_rules already makes),
+and `should_validate` itself is a single, cheap boolean check per call
+for functions that don't opt in (`if not has_bypass: return True` — no
+dict lookup, no extra work). This cost was weighed against splitting
+this decorator into two (one plain, one bypass-aware): a second,
+near-identical implementation would need to track every future change to
+this file in lockstep (the async branch, `check`/`overrides`/
+`check_return` handling, the `@overload` pair) purely to save a single
+`if` per call that the runtime cost of `inspect.Signature.bind()` alone
+already dwarfs. One decorator that silently does nothing extra for
+functions without a bypass parameter, and gates exactly two operations
+for functions that opt in, was judged the better trade — no drift risk,
+no extra decision for callers to make about which decorator to reach for.
+
+`is_bypass_parameter` deliberately does not *require* a function to have
+a "validate" parameter — bypass support is opt-in per function, detected
+structurally (name + bool-or-unannotated type), never enforced. Requiring
+it would tie a specific parameter name to this decorator's behavior
+unconditionally, which is exactly the kind of implicit, guessed-at
+convention this library avoids elsewhere (see override_rules' own
+rejection of a similarly implicit tuple-vs-single-rule guess).
+
+---
+
+## 9. Naming: the Local `validate` Variable
+
+Inside each wrapper, the boolean result of `should_validate(...)` is
+bound to a local variable literally named `validate` — matching
+`BYPASS_PARAM_NAME`'s value, but not referencing anything by that name:
+no `validate()` function is imported into this module, so this is purely
+a local, per-call flag chosen to read naturally at each call site
+(`if validate: ...`, `if validate and return_rule is not None: ...|`),
+mirroring the parameter name a decorated function would use for the same
+concept in its own signature.
 """
