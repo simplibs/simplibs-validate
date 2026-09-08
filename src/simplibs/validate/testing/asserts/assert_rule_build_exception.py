@@ -5,6 +5,7 @@ from ...exceptions import ValidationError
 from ...rules.base_class import Rule
 
 
+# noinspection PyUnresolvedReferences
 def assert_rule_build_exception(
     subtests: Any,
     rule: Rule,

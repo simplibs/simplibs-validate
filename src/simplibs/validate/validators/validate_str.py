@@ -3,7 +3,7 @@ from typing import Any, Container
 from .rules.string_rule import string_rule
 
 
-def validate_string(
+def validate_str(
     value: Any,
     *,
     # Processing params:
@@ -92,10 +92,10 @@ def validate_string(
 
 
 _DESIGN_NOTES = """
-# validate_string — Top of the String Validation Path
+# validate_str — Top of the String Validation Path
 
 ## Purpose
-The final step of the string / string_rule / validate_string chain: a
+The final step of the string / string_rule / validate_str chain: a
 full-featured, standalone entry point for one-off string validation,
 carrying the same completeness of interface as calling `.validate()` on
 any hand-built Rule directly.

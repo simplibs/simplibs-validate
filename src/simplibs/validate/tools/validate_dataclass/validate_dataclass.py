@@ -6,7 +6,7 @@ from typing import Any, Callable, TypeVar, overload
 from ...rules.base_class import Rule
 from ..validate_call._helpers import compile_parameter_rules
 # Inners
-from ._helpers import get_context_string
+from ._helpers import get_dataclass_context_string
 from ._validations import raise_not_a_dataclass_error
 # Annotations
 C = TypeVar("C")
@@ -93,7 +93,7 @@ def validate_dataclass(
     original_init = cls.__init__
     signature = inspect.signature(original_init)
     compiled = compile_parameter_rules(original_init, signature, check=check, overrides=overrides or {})
-    context = get_context_string(cls)
+    context = get_dataclass_context_string(cls)
 
     # 4. Wrap __init__ — validates raw constructor arguments before any
     #    field is assigned onto self (matters for frozen dataclasses:

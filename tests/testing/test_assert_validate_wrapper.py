@@ -3,7 +3,7 @@
 import pytest
 from typing import Any
 from simplibs.validate.testing import assert_validate_wrapper
-from simplibs.validate.validators import validate_string
+from simplibs.validate.validators import validate_str
 from simplibs.validate.validators.rules import string_rule
 
 
@@ -11,7 +11,7 @@ def test_assert_validate_wrapper_happy_path(subtests):
     """Verify that a compliant wrapper function passes contract assertion."""
     assert_validate_wrapper(
         subtests,
-        validate_func=validate_string,
+        validate_func=validate_str,
         rule_factory=string_rule,
         valid_value="user_admin",
         invalid_value=123,

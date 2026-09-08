@@ -24,9 +24,12 @@ def assert_rule_param_error(
         intro: Optional prefix string added to generated subtest identity names.
     """
 
-    def make_invalid_call(args: tuple[Any, ...], kwargs: dict[str, Any]) -> Callable[[], None]:
+    def make_invalid_call(
+        call_args: tuple[Any, ...],
+        call_kwargs: dict[str, Any]
+    ) -> Callable[[], None]:
         def _call() -> None:
-            rule_factory(*args, **kwargs)
+            rule_factory(*call_args, **call_kwargs)
         return _call
 
     for index, (args, kwargs) in enumerate(invalid_init_params):

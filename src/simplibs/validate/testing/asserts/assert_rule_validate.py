@@ -27,12 +27,12 @@ def assert_rule_validate(
         intro: Optional prefix string added to generated subtest identity names.
     """
 
-    def check_valid(val: Any) -> None:
-        assert rule.validate(val) is True
-        assert rule.validate(val, return_value=True) == val
+    def check_valid(value: Any) -> None:
+        assert rule.validate(value) is True
+        assert rule.validate(value, return_value=True) == val
 
-    def check_return_bool_false(val: Any) -> None:
-        assert rule.validate(val, return_bool=True) is False
+    def check_return_bool_false(value: Any) -> None:
+        assert rule.validate(value, return_bool=True) is False
 
     # 1. Positive checks (pass without exception, in both return modes)
     for index, val in enumerate(valid_values):

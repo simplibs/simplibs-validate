@@ -69,5 +69,5 @@ def validate_type(
 _DESIGN_NOTES = """
 # validate_type — Top of the Type/Class Validation Path
 
-See `validate_string.py`'s design notes for the shared rationale.
+See `validate_str.py`'s design notes for the shared rationale.
 """

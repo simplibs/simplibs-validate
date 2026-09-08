@@ -26,6 +26,8 @@ def raise_invalid(
     Raises:
         ValidationError: Always raises the exception constructed by the rule or fallback factory.
     """
+
+    # 1. Rule instance handling
     if isinstance(rule, Rule):
         raise rule.build_exception(
             value,
@@ -33,6 +35,7 @@ def raise_invalid(
             context=context,
         )
 
+    # 2. Callable handling (plain function / lambda)
     raise build_validation_error(
         rule,
         value,

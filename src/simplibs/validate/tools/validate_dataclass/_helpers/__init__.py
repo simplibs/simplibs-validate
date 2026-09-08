@@ -1,4 +1,4 @@
-from .get_context_string import get_context_string
+from .get_dataclass_context_string import get_dataclass_context_string
 
 
 _DESIGN_NOTES = """
@@ -10,7 +10,7 @@ extract metadata and build diagnostic context strings.
 
 ## Internal Components Registry
 
-| Component            | Type     | Description                                                                 |
-| :------------------- | :------- | :-------------------------------------------------------------------------- |
-| `get_context_string` | Function | Safely extracts formatted diagnostic context strings from target dataclasses.|
+| Component                      | Type     | Description                                                                 |
+| :----------------------------- | :------- | :-------------------------------------------------------------------------- |
+| `get_dataclass_context_string` | Function | Safely extracts formatted diagnostic context strings from target dataclasses.|
 """

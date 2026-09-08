@@ -81,7 +81,7 @@ def validate_container(
 _DESIGN_NOTES = """
 # validate_container — Top of the Container Validation Path
 
-See `validate_string.py`'s design notes for the shared rationale (direct
+See `validate_str.py`'s design notes for the shared rationale (direct
 `.validate()` delegation instead of the `validate()` function, full
 parameter surface documented at this outermost layer).
 """

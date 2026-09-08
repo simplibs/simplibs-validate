@@ -1,7 +1,7 @@
 from typing import Any
 
 
-def get_context_string(cls: type[Any]) -> str:
+def get_dataclass_context_string(cls: type[Any]) -> str:
     """Extract a human-readable dataclass execution context string.
 
     Args:
@@ -20,7 +20,7 @@ def get_context_string(cls: type[Any]) -> str:
 
 
 _DESIGN_NOTES = """
-# get_context_string — validate_dataclass Context Builder
+# get_dataclass_context_string — validate_dataclass Context Builder
 
 ## Purpose
 Safely extracts human-readable diagnostic metadata (`__module__` and `__qualname__`)

@@ -98,5 +98,5 @@ def validate_float(
 _DESIGN_NOTES = """
 # validate_float — Top of the Float Validation Path
 
-See `validate_string.py`'s design notes for the shared rationale.
+See `validate_str.py`'s design notes for the shared rationale.
 """

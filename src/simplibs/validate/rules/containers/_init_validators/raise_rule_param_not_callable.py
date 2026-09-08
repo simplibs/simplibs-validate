@@ -4,13 +4,20 @@ from ....exceptions import ParamError
 
 
 def raise_rule_param_not_callable(
-    rule_name: Literal["ForEach", "Not"],
+    rule_name: Literal["AllOf", "AnyOf", "NoneOf", "ForEach", "Not"] | str,
     rule_param: Any,
 ) -> None:
     """Check that the child rule is callable/Rule. If not, raise a ParamError."""
 
     # 1. Prepare data
-    example = "IsInteger()" if rule_name == "ForEach" else "IsNone()"
+    examples = {
+        "ForEach": "IsInteger()",
+        "Not": "IsNone()",
+        "AllOf": "IsInteger(), GreaterThan(0)",
+        "AnyOf": "IsInteger(), IsFloat()",
+        "NoneOf": "IsZero(), IsNone()",
+    }
+    example = examples.get(rule_name, "IsInteger()")
 
     # 2. Build and raise the exception
     raise ParamError(

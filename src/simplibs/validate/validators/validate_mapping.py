@@ -69,7 +69,7 @@ def validate_mapping(
 _DESIGN_NOTES = """
 # validate_mapping — Top of the Mapping Validation Path
 
-See `validate_string.py`'s design notes for the shared rationale. Note
+See `validate_str.py`'s design notes for the shared rationale. Note
 that `has_key` keeps the `UNSET` sentinel here too, for the same reason
 documented in `mapping_rule.py`.
 """

@@ -85,5 +85,5 @@ def validate_number(
 _DESIGN_NOTES = """
 # validate_number — Top of the General Number Validation Path
 
-See `validate_string.py`'s design notes for the shared rationale.
+See `validate_str.py`'s design notes for the shared rationale.
 """

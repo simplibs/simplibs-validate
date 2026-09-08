@@ -14,7 +14,7 @@ from .validate_float import validate_float
 from .validate_int import validate_int
 from .validate_mapping import validate_mapping
 from .validate_number import validate_number
-from .validate_string import validate_string
+from .validate_str import validate_str
 from .validate_type import validate_type
 
 __all__ = [
@@ -32,7 +32,7 @@ __all__ = [
     "validate_int",
     "validate_mapping",
     "validate_number",
-    "validate_string",
+    "validate_str",
     "validate_type",
 ]
 
@@ -62,6 +62,6 @@ type-specific validation entry points for common data types.
 | `validate_int`       | Function | Directly validates a value as an integer against constraints.            |
 | `validate_mapping`   | Function | Directly validates a value as a dict against constraints.                |
 | `validate_number`    | Function | Directly validates a value as a number against constraints.              |
-| `validate_string`    | Function | Directly validates a value as a string against constraints.              |
+| `validate_str`    | Function | Directly validates a value as a string against constraints.              |
 | `validate_type`      | Function | Directly validates a value as a class/type object against constraints.   |
 """

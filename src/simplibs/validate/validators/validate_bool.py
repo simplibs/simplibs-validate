@@ -55,5 +55,5 @@ def validate_bool(
 _DESIGN_NOTES = """
 # validate_bool — Top of the Boolean Validation Path
 
-See `validate_string.py`'s design notes for the shared rationale.
+See `validate_str.py`'s design notes for the shared rationale.
 """

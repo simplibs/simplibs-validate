@@ -1,10 +1,13 @@
-from typing import Any
+from typing import Any, Callable
 # Outers
 from ...exceptions import ValidationError
 from ..base_class import Rule
 # Inners
 from ._helpers import as_predicate, describe_rule
-from ._init_validators import raise_requires_at_least_one_rule_error
+from ._init_validators import (
+    raise_requires_at_least_one_rule_error,
+    raise_rule_param_not_callable
+)
 
 
 class NoneOf(Rule):
@@ -22,11 +25,15 @@ class NoneOf(Rule):
     # ----------------------------------------------------------------------
     # Constructor initialization
     # ----------------------------------------------------------------------
-    def __init__(self, *rules: Rule | Any) -> None:
+    def __init__(self, *rules: Rule | Callable[[Any], bool]) -> None:
 
         # 1. Parameter validation
         if not rules:
             raise_requires_at_least_one_rule_error("NoneOf")
+
+        for rule in rules:
+            if not callable(rule):
+                raise_rule_param_not_callable("NoneOf", rule)
 
         # 2. Parameter assignment
         self.rules = rules

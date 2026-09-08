@@ -92,5 +92,5 @@ def validate_int(
 _DESIGN_NOTES = """
 # validate_int — Top of the Integer Validation Path
 
-See `validate_string.py`'s design notes for the shared rationale.
+See `validate_str.py`'s design notes for the shared rationale.
 """

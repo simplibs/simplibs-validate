@@ -24,7 +24,7 @@ def assert_validate_wrapper(
 
     Args:
         subtests: The native pytest subtests fixture manager instance.
-        validate_func: The high-level wrapper function (e.g. validate_string).
+        validate_func: The high-level wrapper function (e.g. validate_str).
         rule_factory: The underlying rule composition factory (e.g. string_rule).
         valid_value: A value expected to pass validation under sample_params.
         invalid_value: A value expected to fail validation under sample_params.
@@ -70,6 +70,7 @@ def assert_validate_wrapper(
 
     with maybe_subtest(subtests, name=f"{intro}invalid_raises_exception", verbose=verbose):
         raised = False
+        # noinspection PyBroadException
         try:
             validate_func(invalid_value, return_bool=False, **sample_params)
         except Exception:

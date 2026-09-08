@@ -41,6 +41,6 @@ and high-level type validators for maximum developer convenience.
 | `simplibs.validate.exceptions` | Exceptions    | Yes                 | Exception hierarchy (`ValidateError`, `ValidationError`, `ParamError`).      |
 | `simplibs.validate.rules`      | Rules Engine  | Yes                 | Validation rules, rule shortcuts, and operator compositions (`&`, `\|`, `~`).|
 | `simplibs.validate.tools`      | Decorators    | Yes                 | Core decorators (`validate_call`, `validate_dataclass`, `log_this`).        |
-| `simplibs.validate.validators` | Function API  | Yes                 | Type-specific functions (`validate_int`, `validate_string`, etc.).          |
+| `simplibs.validate.validators` | Function API  | Yes                 | Type-specific functions (`validate_int`, `validate_str`, etc.).          |
 | `simplibs.validate.testing`    | Test Suite    | No                  | Assertion contracts and test utilities (excluded from root wildcard).       |
 """
