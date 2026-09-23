@@ -1,7 +1,6 @@
 from typing import Any, Callable
-# Inners
-from .rules.base_class import Rule
-from .exceptions import build_validation_error
+from simplibs.rules import Rule
+from simplibs.exception import build_validation_error
 
 
 def validate(

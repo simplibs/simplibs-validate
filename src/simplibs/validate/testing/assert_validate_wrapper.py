@@ -1,8 +1,7 @@
 import inspect
 from typing import Any, Callable
 from simplibs.exception.testing import maybe_subtest
-# Outers
-from ..rules.base_class import Rule
+from simplibs.rules import Rule
 
 
 def assert_validate_wrapper(

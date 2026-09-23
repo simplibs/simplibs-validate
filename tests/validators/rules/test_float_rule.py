@@ -2,7 +2,7 @@
 
 import math
 import pytest
-from simplibs.validate.testing import assert_rule_contract
+from simplibs.rules.testing import assert_rule_contract
 from simplibs.validate.validators.rules import float_rule
 
 
@@ -18,7 +18,6 @@ def test_float_rule_default_contract(subtests):
             10, "3.14", True, None,
         ],
         rule_factory=float_rule,
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )
@@ -37,7 +36,6 @@ def test_float_rule_non_finite_allowed(subtests):
         valid_values=[0.0, 3.14, math.inf, -math.inf],
         invalid_values=[10, "3.14", True, None],
         rule_factory=float_rule,
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )
@@ -67,7 +65,6 @@ def test_float_rule_numeric_constraints(subtests):
             5.8,     # Outside close_to tolerance
             -2.0,    # Fails positive / greater_than
         ],
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )

@@ -1,6 +1,6 @@
 """Tests for the boolean_rule composition factory."""
 
-from simplibs.validate.testing import assert_rule_contract
+from simplibs.rules.testing import assert_rule_contract
 from simplibs.validate.validators.rules import boolean_rule
 
 
@@ -12,7 +12,6 @@ def test_boolean_rule_default_contract(subtests):
         valid_values=[True, False],
         invalid_values=[1, 0, "True", None, [], {}],
         rule_factory=boolean_rule,
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )
@@ -25,7 +24,6 @@ def test_boolean_rule_equals_true(subtests):
         rule=boolean_rule(equals=True),
         valid_values=[True],
         invalid_values=[False, 1, 0, "True"],
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )
@@ -38,7 +36,6 @@ def test_boolean_rule_equals_false(subtests):
         rule=boolean_rule(equals=False),
         valid_values=[False],
         invalid_values=[True, 0, 1, "False"],
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )

@@ -1,9 +1,9 @@
 """Tests for the raise_invalid core function."""
 
 import pytest
-from simplibs.validate.exceptions import ValidationError
+from simplibs.exception import ValidationError
 from simplibs.validate.raise_invalid import raise_invalid
-from simplibs.validate.rules.base_class import Rule
+from simplibs.rules.base_class import Rule
 
 
 class DummyRuleWithSpy(Rule):

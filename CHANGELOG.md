@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.0] - 2026-09-23
+
+### ⚠️ Breaking Changes
+
+* **Rule engine extracted into `simplibs-rules`**: the `Rule` base class, every
+  container rule (`AllOf`, `AnyOf`, `NoneOf`, `Not`, `ForEach`, `Compose`), every
+  predicate package (`arithmetic`, `checkers`, `collections`, `comparisons`,
+  `introspection`, `logic`, `numeric`, `strings`), the snake-case shortcuts and
+  `rule_class`/`rules` namespaces, and the whole annotation-decomposition engine
+  (`IsTyping`, `build_typing_rule`, `IsAny`, `is_supported_annotation`,
+  `get_supported_origins`) no longer live in `simplibs-validate` — they've moved to the
+  new standalone [`simplibs-rules`](https://pypi.org/project/simplibs-rules/) library,
+  now a core dependency of this package. Import them from `simplibs.rules` instead of
+  `simplibs.validate`.
+* **Testing utilities narrowed accordingly**: `assert_rule_contract` and its atomic
+  assertions (`assert_rule_is_valid`, `assert_rule_validate`,
+  `assert_rule_build_exception`, `assert_rule_raise_invalid`, `assert_rule_param_error`)
+  moved to `simplibs-rules` — they test the `Rule` contract itself, not anything
+  specific to this library.
+
+### ✨ Added
+
+* **Type Testing Utilities (`testing/`)**:
+  * `assert_type_contract`: master orchestrator utility that verifies an annotated type's
+    contract, ensuring both its underlying rule decomposition and its integration with
+    `@validate_call` work properly against valid and invalid inputs.
+  * `assert_type_validate_call_integration`: specialized integration assertion testing
+    a type's execution when passed directly through `@validate_call`.
+
+### 🔄 Changed
+
+* **Why the split**: the atomic rule engine and its annotation-decomposition machinery
+  are genuinely independent of the validation entry point, wrappers, and decorators
+  this library builds on top of them — other tools may want the rules without the
+  `validate_call`/`validate_dataclass` layer, or vice versa. Separating them into their
+  own library keeps each dependency honest and each package's surface focused on one
+  job, rather than one growing package doing all of it.
+* `simplibs-validate`'s own surface is now focused on: the `validate()` entry point;
+  `raise_invalid()`; the specialized validators (`*_rule` composers and their
+  `validate_*` wrappers); tools (`validate_call`/`validate_dataclass`/`override_rules`/
+  `validated_type`/`log_this`); and testing utilities (`assert_validate_wrapper`,
+  `assert_type_contract`, `assert_type_validate_call_integration`).
+* `simplibs-validate` now depends on `simplibs-rules` for the `Rule` contract,
+  predicates, and typing-decomposition engine that `validate_call`/`validate_dataclass`
+  still rely on internally.
+
+### 📋 Improved
+
+* **Documentation**: main README rewritten to reflect the split, with a two-layer
+  architecture diagram (`simplibs-rules` → `validate()` → validators/tools) replacing
+  the previous three-layer, single-library one, and cross-links to `simplibs-rules`
+  throughout.
+
+---
+
 ## [0.1.0] - 2026-09-08
 
 ### ✨ Added

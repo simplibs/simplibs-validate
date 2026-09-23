@@ -1,8 +1,6 @@
-# >>> src/simplibs/validate/validators/rules/type_rule.py
 from typing import Any, Container
-# Outers
-from ...rules.base_class import Rule
-from ...rules import (
+from simplibs.rules import (
+    Rule,
     AllOf,
     is_type as _is_type,
     is_subclass as _is_subclass,

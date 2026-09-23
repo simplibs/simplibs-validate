@@ -1,6 +1,5 @@
-# Outers
-from ...rules.base_class import Rule
-from ...rules import (
+from simplibs.rules import (
+    Rule,
     AllOf,
     is_bool as _is_bool,
     equals as _equals,

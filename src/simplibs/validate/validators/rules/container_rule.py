@@ -1,7 +1,6 @@
 from typing import Any, Callable, Collection
-# Outers
-from ...rules.base_class import Rule
-from ...rules import (
+from simplibs.rules import (
+    Rule,
     AllOf,
     ForEach,
     is_container as _is_container,

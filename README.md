@@ -4,16 +4,17 @@
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
 [![Licence](https://img.shields.io/badge/licence-MIT-green)](https://github.com/simplibs/simplibs-validate/blob/main/LICENSE)
 
-**Composable, explicit validation — no magic, no data transformation, just answers.**
+**The validation layer on top of [`simplibs-rules`](https://pypi.org/project/simplibs-rules/) — entry points, ready-made validators, and self-validating decorators.**
 
-A lightweight Python library for validating values against rules built from small,
-single-purpose predicate classes. Rules compose with plain operators (`|`, `&`, `~`),
-carry structured, human-readable diagnostics on failure, and — through `IsTyping` —
-understand your existing type annotations directly, so a whole function's inputs can
-be validated automatically from its own signature.
+`simplibs-rules` defines the atomic `Rule` objects and lets you compose them with
+`|`/`&`/`~`. `simplibs-validate` is what turns a rule (or a whole function signature)
+into an actual validation *action*: a single `validate()` call, a batteries-included
+`validate_*` wrapper for common types, or a decorator that validates a function or
+dataclass automatically from its own type hints.
 
 ```python
-from simplibs.validate import validate, is_integer, greater_than
+from simplibs.validate import validate
+from simplibs.rules import is_integer, greater_than
 
 validate(5, is_integer & greater_than(0))          # -> True
 validate(-5, is_integer & greater_than(0))          # -> raises ValidationError
@@ -23,26 +24,17 @@ validate(-5, is_integer & greater_than(0))          # -> raises ValidationError
 
 ## 🧭 The Core Philosophy
 
-Most validation approaches force a choice: either write ad-hoc `if`/`raise` checks
-scattered through your codebase, or adopt a heavy framework that also wants to parse,
-coerce, and serialize your data along the way. `simplibs-validate` is neither — it's a
-**pure predicate engine**. A `Rule` never transforms a value; it only ever answers "does
-this satisfy me?" and, on failure, explains exactly why.
-
-Every rule is a small, composable object. Combine them with plain Python operators
-instead of nested configuration:
+`simplibs-validate` doesn't define new predicates of its own — that's
+[`simplibs-rules`](https://pypi.org/project/simplibs-rules/)'s job. What it adds is the
+layer people actually reach for day to day: a universal `validate()` entry point,
+ready-made `validate_*` functions for common types so you rarely need to hand-compose a
+rule tree, and decorators that make an entire function or dataclass self-validating from
+nothing more than its own type annotations:
 
 ```python
-is_string & has_length(min_length=3) & not_blank
-```
-
-And because rules already understand Python's own typing system, the same machinery
-that powers `validate()` also powers `@validate_call` — a decorator that validates an
-entire function's arguments straight from its type hints, no separate schema to
-maintain:
-
-```python
-from simplibs.validate import validate_call, validated_type
+from simplibs.validate import validate_call
+from simplibs.types import validated_type
+from simplibs.rules import greater_than
 
 PositiveInt = validated_type(int, greater_than(0))
 
@@ -55,10 +47,10 @@ register(-5)                       # raises ValidationError
 register(-5, validate=False)       # explicitly skipped — e.g. already validated upstream
 ```
 
-That combination — annotation-driven rules, a decorator that enforces them
-automatically, and a per-call opt-out for code paths that already trust their data —
-is what lets you build fully self-validating functions and dataclasses from nothing
-more than their own signatures.
+That combination — annotation-driven rules from `simplibs-rules`, named reusable types
+from `simplibs-types`, and a decorator that enforces them automatically with a per-call
+opt-out for code paths that already trust their data — is what lets you build fully
+self-validating functions and dataclasses from nothing more than their own signatures.
 
 ---
 
@@ -68,6 +60,9 @@ more than their own signatures.
 pip install simplibs-validate
 ```
 
+`simplibs-rules` is installed automatically as a dependency — its rules and operators
+(`is_integer`, `greater_than`, `IsTyping`, ...) are what you pass into everything below.
+
 ---
 
 ## 🚀 Quick Start in 60 Seconds
@@ -75,7 +70,8 @@ pip install simplibs-validate
 ### Level 1: One-off validation
 
 ```python
-from simplibs.validate import validate, is_integer, greater_than
+from simplibs.validate import validate
+from simplibs.rules import is_integer, greater_than
 
 validate(5, is_integer & greater_than(0))
 validate(5, is_integer & greater_than(0), return_bool=True)   # -> True, no exception
@@ -112,17 +108,17 @@ create_user("Alice", "30")    # raises ValidationError
 ## 🛠️ The Architecture: 3 Layers
 
 ```
-┌─────────────────────────┐
-│          Rules          │ ◄── Rule subclasses + snake_case shortcuts
-└────────────┬────────────┘
+┌──────────────────────────┐
+│      simplibs-rules      │ ◄── Rule subclasses + snake_case shortcuts
+└────────────┬─────────────┘
              ▼
-┌─────────────────────────┐
-│       Validators        │ ◄── validate_string, validate_int, ... presets
-└────────────┬────────────┘
+┌──────────────────────────┐
+│        validators        │ ◄── validate, raise_invalid, validate_string, validate_int, ... 
+└────────────┬─────────────┘
              ▼
-┌─────────────────────────┐
-│          Tools          │ ◄── validate_call, validate_dataclass, log_this, ...
-└─────────────────────────┘
+┌──────────────────────────┐
+│    decorators & tools    │ ◄── validate_call, validate_dataclass, log_this, ...
+└──────────────────────────┘
 ```
 
 ### 1. `validate` — the universal entry point
@@ -232,285 +228,36 @@ constraints, build the rule once with `*_rule(...)` and reuse it, instead of cal
 
 ---
 
-## 🧩 The `Rule` Class
-
-Every validation in this library, from the simplest type check to the most elaborate
-composed constraint, is a `Rule`. It defines the minimal contract every concrete rule
-implements (`is_valid`, `build_exception`), and builds a full evaluation interface on
-top of it: `validate()`, the callable shorthand (`rule(value)`), operator composition
-(`|`, `&`, `~`), and `annotated()` — the bridge into Python's own typing system.
-
-```python
-class Rule(ABC):
-  
-    # ----------------------------------------------------------------------
-    # 1) Abstract Interface (mandatory for subclasses)
-    # ----------------------------------------------------------------------
-      
-    @abstractmethod
-    def is_valid(
-        self,
-        value: Any,
-    ) -> bool:
-        """Return True if the tested value satisfies the rule, otherwise False."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def build_exception(
-        self,
-        value: Any,
-        value_name: str | None = None,
-        context: str | None = None,
-    ) -> Exception:
-        """Create and return an exception instance (SimpleException) describing the validation failure."""
-        raise NotImplementedError
-
-    # ----------------------------------------------------------------------
-    # 2) Public Interface & Evaluation Logic
-    # ----------------------------------------------------------------------
-
-    def __call__(
-        self,
-        value: Any,
-    ) -> bool:
-        """Allow using the rule instance directly as a predicate function."""
-        return self.is_valid(value)
-
-    def validate(
-        self,
-        value: Any,
-        *,
-        value_name: str | None = None,
-        context: str | None = None,
-        return_bool: bool = False,
-        return_value: bool = False,
-    ) -> Any:
-        """Validate a value against this rule."""
-        if self.is_valid(value):
-            return value if return_value else True
-
-        if return_bool:
-            return False
-
-        raise self.build_exception(
-            value,
-            value_name=value_name,
-            context=context,
-        )
-
-    # ----------------------------------------------------------------------
-    # 3) Typing Integration
-    # ----------------------------------------------------------------------
-
-    def annotated(self, type_: type) -> Any:
-        """Wrap this rule as `typing.Annotated[type_, self]` for type hints."""
-        return Annotated[type_, self]
-
-    # ----------------------------------------------------------------------
-    # 4) Operator-Based Composition (|, &, ~)
-    # ----------------------------------------------------------------------
-
-    def __or__(self, other: "Rule | Callable[[Any], bool]") -> "Rule":
-        """Combine with another rule/callable via logical OR: `rule1 | rule2`."""
-        return AnyOf(self, other)
-
-    def __ror__(self, other: "Rule | Callable[[Any], bool]") -> "Rule":
-        """Support `other | rule` when `other` has no (or a declining) `__or__`."""
-        return AnyOf(other, self)
-
-    def __and__(self, other: "Rule | Callable[[Any], bool]") -> "Rule":
-        """Combine with another rule/callable via logical AND: `rule1 & rule2`."""
-        return AllOf(self, other)
-
-    def __rand__(self, other: "Rule | Callable[[Any], bool]") -> "Rule":
-        """Support `other & rule` when `other` has no (or a declining) `__and__`."""
-        return AllOf(other, self)
-
-    def __invert__(self) -> "Rule":
-        """Negate this rule via `~rule`. Equivalent to `Not(self)`."""
-        return Not(self)
-```
-
-➡️ Full method-by-method reference: [README_RULE_CLASS](https://github.com/simplibs/simplibs-validate/blob/main/docs/rules/README_RULE_CLASS.md)
-
----
-
-## 📖 Rule Quick Reference
-
-Every built-in `Rule` is exposed two ways: as its **class** (`IsInteger`), and as a
-**snake_case shortcut** (`is_integer`) — a pre-instantiated object for zero-parameter
-rules, or the class itself for parameterized ones. Both are fully interchangeable and
-compose identically with `|`/`&`/`~`.
-
-```python
-validate(value, is_integer & greater_than(0))
-# is exactly equivalent to:
-validate(value, IsInteger() & GreaterThan(0))
-```
-
-Every rule below also has a `rule_class.<Name>` entry (for `isinstance` checks,
-subclassing, or programmatic construction) and a `rules.<shortcut>` namespace entry —
-both point at the same underlying object/class as the direct import.
-
-### `containers/` — composing other rules
-
-| Class     | Shortcut   | Params                                                                               |
-|-----------|------------|--------------------------------------------------------------------------------------|
-| `AllOf`   | `all_of`   | `*rules: Union[Rule, Callable[[Any], bool]]`                                         |
-| `AnyOf`   | `any_of`   | `*rules: Union[Rule, Callable[[Any], bool]]`                                         |
-| `Compose` | `compose`  | `transformer: Callable[[Any], Any]`, `validator: Union[Rule, Callable[[Any], bool]]` |
-| `ForEach` | `for_each` | `rule: Union[Rule, Callable[[Any], bool]]`                                           |
-| `NoneOf`  | `none_of`  | `*rules: Union[Rule, Callable[[Any], bool]]`                                         |
-| `Not`     | `negate`   | `rule: Callable[[Any], bool]`                                                        |
-
-➡️ [README_RULE_CONTAINERS](https://github.com/simplibs/simplibs-validate/blob/main/docs/rules/README_RULE_CONTAINERS.md)
-
-### `predicates/arithmetic/` — numeric relationships
-
-| Class          | Shortcut        | Params                                                                             |
-|----------------|-----------------|------------------------------------------------------------------------------------|
-| `CloseTo`      | `close_to`      | `target: Union[float, int]`, `*`, `rel_tol: float  = 1e-9`, `abs_tol: float = 0.0` |
-| `DivisibleBy`  | `divisible_by`  | `divisor: int`                                                                     |
-| `HasRemainder` | `has_remainder` | `divisor: int`, `remainder: int`                                                   |
-
-➡️ [README_RULE_PREDICATE_ARITHMETIC](https://github.com/simplibs/simplibs-validate/blob/main/docs/rules/README_RULE_PREDICATE_ARITHMETIC.md)
-
-### `predicates/checkers/` — basic state & identity
-
-| Class      | Shortcut    | Params |
-|------------|-------------|--------|
-| `IsEmpty`  | `is_empty`  | `-`    |
-| `IsFalse`  | `is_false`  | `-`    |
-| `IsNone`   | `is_none`   | `-`    |
-| `IsTrue`   | `is_true`   | `-`    |
-| `NotEmpty` | `not_empty` | `-`    |
-
-➡️ [README_RULE_PREDICATE_CHECKERS](https://github.com/simplibs/simplibs-validate/blob/main/docs/rules/README_RULE_PREDICATE_CHECKERS.md)
-
-### `predicates/collections/` — containers, mappings & iterables
-
-| Class          | Shortcut         | Params                       |
-|----------------|------------------|------------------------------|
-| `AllUnique`    | `all_unique`     | `-`                          |
-| `HasItem`      | `has_item`       | `item: Any`                  |
-| `HasKey`       | `has_key`        | `key: Any`                   |
-| `HasKeys`      | `has_keys`       | `*keys: Any`                 |
-| `IsContainer`  | `is_container`   | `-`                          |
-| `IsSubsetOf`   | `is_subset_of`   | `reference: Collection[Any]` |
-| `IsSupersetOf` | `is_superset_of` | `reference: Collection[Any]` |
-
-➡️ [README_RULE_PREDICATE_COLLECTIONS](https://github.com/simplibs/simplibs-validate/blob/main/docs/rules/README_RULE_PREDICATE_COLLECTIONS.md)
-
-### `predicates/comparisons/` — ordering & equality
-
-| Class            | Shortcut(s)              | Params                                                                                 |
-|------------------|--------------------------|----------------------------------------------------------------------------------------|
-| `Equals`         | `equals`, `eq`           | `expected_value: Any`                                                                  |
-| `NotEquals`      | `not_equals`, `ne`       | `forbidden: Any`                                                                       |
-| `GreaterThan`    | `greater_than`, `gt`     | `threshold: Any`                                                                       |
-| `GreaterOrEqual` | `greater_or_equal`, `ge` | `threshold: Any`                                                                       |
-| `LessThan`       | `less_than`, `lt`        | `threshold: Any`                                                                       |
-| `LessOrEqual`    | `less_or_equal`, `le`    | `threshold: Any`                                                                       |
-| `InRange`        | `in_range`               | `min_val: Any`, `max_val: Any`, `include_min: bool = True`, `include_max: bool = True` |
-
-➡️ [README_RULE_PREDICATE_COMPARISONS](https://github.com/simplibs/simplibs-validate/blob/main/docs/rules/README_RULE_PREDICATE_COMPARISONS.md)
-
-### `predicates/introspection/` — structural & reflective checks
-
-| Class          | Shortcut(s)                 | Params                                                                        |
-|----------------|-----------------------------|-------------------------------------------------------------------------------|
-| `IsInstance`   | `is_instance`               | `*types: type`                                                                |
-| `IsType`       | `is_type`                   | `-`                                                                           |
-| `IsSubclass`   | `is_subclass`               | `*types: type`                                                                |
-| `IsDataclass`  | `is_dataclass`              | `-`                                                                           |
-| `IsCallable`   | `is_callable`               | `-`                                                                           |
-| `IsHashable`   | `is_hashable`               | `-`                                                                           |
-| `IsIterable`   | `is_iterable`               | `-`                                                                           |
-| `HasAttribute` | `has_attribute`, `has_attr` | `attr_name: str`                                                              |
-| `HasLength`    | `has_length`                | `length: int = None`, `*`, `min_length: int = None`, `max_length: int = None` |
-
-➡️ [README_RULE_PREDICATE_INTROSPECTION](https://github.com/simplibs/simplibs-validate/blob/main/docs/rules/README_RULE_PREDICATE_INTROSPECTION.md)
-
-### `predicates/logic/` — identity, membership & custom predicates
-
-| Class      | Shortcut(s)          | Params                                            |
-|------------|----------------------|---------------------------------------------------|
-| `Is`       | `same_as`, `is_same` | `expected: Any`                                   |
-| `IsNot`    | `is_not`             | `forbidden: Any`                                  |
-| `IsIn`     | `is_in`              | `options: Container[Any]`, `strict: bool = False` |
-| `NotIn`    | `not_in`             | `options: Container[Any]`, `strict: bool = False` |
-| `UserRule` | `user_rule`          | `rule: Callable[[Any], bool]`                     |
-
-➡️ [README_RULE_PREDICATE_LOGIC](https://github.com/simplibs/simplibs-validate/blob/main/docs/rules/README_RULE_PREDICATE_LOGIC.md)
-
-> 💡 `Is`/`Not` are Python keywords and can't be used as identifiers directly — their
-> shortcuts (`same_as`, `negate`) use a descriptive alternative instead.
-
-### `predicates/numeric/` — numeric type identity
-
-| Class               | Shortcut(s)            | Params                |
-|---------------------|------------------------|-----------------------|
-| `IsBool`            | `is_bool`              | `-`                   |
-| `IsInteger`         | `is_integer`, `is_int` | `-`                   |
-| `IsFloat`           | `is_float`             | `-`                   |
-| `IsDecimal`         | `is_decimal`           | `-`                   |
-| `IsNumber`          | `is_number`            | `-`                   |
-| `IsPrimitiveNumber` | `is_primitive_number`  | `-`                   |
-| `IsZero`            | `is_zero`              | `-`                   |
-| `IsNan`             | `is_nan`               | `-`                   |
-| `IsInfinity`        | `is_infinity`          | `-`                   |
-| `IsPi`              | `is_pi`                | `decimal_places: int` |
-
-➡️ [README_RULE_PREDICATE_NUMERIC](https://github.com/simplibs/simplibs-validate/blob/main/docs/rules/README_RULE_PREDICATE_NUMERIC.md)
-
-### `predicates/strings/` — string content
-
-| Class           | Shortcut(s)           | Params               |
-|-----------------|-----------------------|----------------------|
-| `IsString`      | `is_string`, `is_str` | `-`                  |
-| `Contains`      | `contains`            | `substring: str`     |
-| `IsSubstringOf` | `is_substring_of`     | `target_string: str` |
-| `StartsWith`    | `starts_with`         | `prefix: str`        |
-| `EndsWith`      | `ends_with`           | `suffix: str`        |
-| `Regex`         | `regex`               | `pattern: str`       |
-| `IsBlank`       | `is_blank`            | `-`                  |
-| `NotBlank`      | `not_blank`           | `-`                  |
-
-➡️ [README_RULE_PREDICATE_STRINGS](https://github.com/simplibs/simplibs-validate/blob/main/docs/rules/README_RULE_PREDICATE_STRINGS.md)
-
-### `typing/` — annotation-driven validation
-
-| Class      | Shortcut(s)             | Params            |
-|------------|-------------------------|-------------------|
-| `IsAny`    | `is_any`, `always_true` | `-`               |
-| `~IsAny`   | `always_false`          | `-`               |
-| `IsTyping` | `is_typing`             | `annotation: Any` |
-
-`IsTyping` recursively decomposes an arbitrary type annotation (`list[int]`, `dict[str,
-int] | None`, `Literal[...]`, `Callable[...]`, ...) into a composed `Rule` tree —
-the mechanism behind `validate_call`/`validate_dataclass`.
-
-➡️ [README_RULE_TYPING](https://github.com/simplibs/simplibs-validate/blob/main/docs/rules/README_RULE_TYPING.md) — the public `IsTyping`/`build_typing_rule` entry points  
-➡️ [README_RULE_TYPING_BUILDERS](https://github.com/simplibs/simplibs-validate/blob/main/docs/rules/README_RULE_TYPING_BUILDERS.md) — the internal per-construct decomposition engine
-
----
-
 ## 🧰 Tools
 
-Beyond individual rules, the `tools` package provides the decorators and helpers that
-make validation part of a function's or dataclass's own definition:
+Beyond individual rules, the `decorators` and `tools` packages provide the
+convenience layers that make validation part of a function's or dataclass's
+definition:
+
+### 🎀 Decorators
+
+The `decorators` package provides decorators that add validation or structured
+logging directly to functions and dataclasses:
 
 * **`validate_call`** — validates a function's arguments (and optionally its return
   value) against its own type annotations, on every call. Supports selective
   validation (`check`), extra constraints (`overrides`), and a per-call bypass switch.
 * **`validate_dataclass`** — the `@dataclass` counterpart: validates every field
   against its annotation on instance construction, before any field is assigned.
+* **`log_this`** — gives any function entry/exit/timing/exception logging, entirely
+  independent of validation, without imposing any logging configuration of its own.
+
+➡️ [README_DECORATORS](https://github.com/simplibs/simplibs-validate/blob/main/docs/decorators/README_DECORATORS.md)
+
+### 🛠️ Tools
+
+The `tools` package provides small helpers used to build reusable validation
+annotations and the rule mappings consumed by the decorators:
+
 * **`validated_type`** — names a reusable `Annotated[type, rule(s)]` combination once,
   for use across multiple annotations.
 * **`override_rules`** — batch-builds the `overrides=` mapping `validate_call`/
   `validate_dataclass` expect, from keyword arguments.
-* **`log_this`** — gives any function entry/exit/timing/exception logging, entirely
-  independent of validation, without imposing any logging configuration of its own.
 
 ➡️ [README_TOOLS](https://github.com/simplibs/simplibs-validate/blob/main/docs/tools/README_TOOLS.md)
 
@@ -554,35 +301,48 @@ points to *your* code, not this library's implementation.
 
 ## 🧪 Testing Utilities
 
-`simplibs-validate` ships with the same testing infrastructure it uses on itself —
-useful if you're writing a custom `Rule` subclass or your own `validate_*` wrapper and
-want thorough coverage without hand-writing every check.
+`simplibs-validate` ships with testing infrastructure for the layer it owns — the
+wrappers, decorators, and validated types, not the underlying atomic rules (see `simplibs-rules`'
+`assert_rule_contract` for that):
 
-* **`assert_rule_contract`** — the master facade for testing a `Rule` subclass: one
-  call runs the full deterministic battery (`is_valid`/`__call__`, the `validate()`
-  return-mode matrix, `build_exception()`'s diagnostic card contract), plus optional
-  constructor `ParamError` and `raise_invalid()` consistency checks.
 * **`assert_validate_wrapper`** — verifies a `validate_*` convenience function
   correctly wraps its underlying `*_rule` factory and delegates properly to
   `Rule.validate()` — signature alignment, successful/failed delegation, both return
   modes.
+* **`assert_type_contract`** — master orchestrator that verifies a `validated_type()`-built
+  construct against the full `Rule` contract battery (by decomposing it via `build_typing_rule`)
+  and optionally tests its execution under `@validate_call`.
+* **`assert_type_validate_call_integration`** — specialized integration probe verifying that
+  a custom type annotation is correctly intercepted and enforced when used on parameters of
+  a `@validate_call`-decorated function.
 
-➡️ [README_TESTING_ASSERTS_RULE_CONTRACT](https://github.com/simplibs/simplibs-validate/blob/main/docs/testing/README_TESTING_ASSERTS_RULE_CONTRACT.md)
-➡️ [README_TESTING_ASSERTS_VALIDATE_WARPER](https://github.com/simplibs/simplibs-validate/blob/main/docs/testing/README_TESTING_ASSERTS_VALIDATE_WARPER.md)  
+➡️ [README_TESTING_ASSERTS_VALIDATE_WRAPPER](https://github.com/simplibs/simplibs-validate/blob/main/docs/testing/README_TESTING_ASSERTS_VALIDATE_WRAPPER.md)  
+➡️ [README_ASSERT_TYPE_CONTRACT](https://github.com/simplibs/simplibs-validate/blob/main/docs/testing/README_ASSERT_TYPE_CONTRACT.md)  
+➡️ [README_ASSERT_TYPE_VALIDATE_CALL_INTEGRATION](https://github.com/simplibs/simplibs-validate/blob/main/docs/testing/README_ASSERT_TYPE_VALIDATE_CALL_INTEGRATION.md)
 
 
 ---
 
 ## 🔭 About the library, from the author's point of view
 
-This is the **first version** of `simplibs-validate` — a deliberately focused core
-(the `Rule` contract, its composition operators, the annotation-decomposition engine,
-and the decorators built on top of it) designed with room to grow, rather than an
-attempt to anticipate every possible validation need up front. Real-world use will
-show, over time, which additional rules, builders, or tools are worth adding — the
-architecture (small, atomized rule classes; a shared `Rule` contract; a single
-recursive decomposition entry point for typing) was chosen specifically so that
-growth stays easy without ever needing to revisit what's already here.
+`simplibs-validate` used to bundle the rule engine itself; that engine has since moved
+to its own library, [`simplibs-rules`](https://pypi.org/project/simplibs-rules/), so
+that the atomic predicates can be depended on independently of the higher-level
+validation entry points and decorators defined here. What remains here is deliberately
+focused: `validate()`, the `validate_*` convenience layer, and the
+`validate_call`/`validate_dataclass` decorators — with room to grow as real-world use
+shows which additional wrappers or tools are worth adding.
+
+---
+
+## 🔗 Related libraries
+
+* **[`simplibs-rules`](https://pypi.org/project/simplibs-rules/)** — the `Rule` base
+  class, operator composition, and every built-in predicate (`is_integer`,
+  `greater_than`, `IsTyping`, ...) used throughout this library.
+* **[`simplibs-types`](https://pypi.org/project/simplibs-types/)** *(in progress)* — reusable, named validated types
+  (`validated_type` and friends) built on `simplibs-rules`, for sharing a single
+  constraint definition across many `validate_call`/`validate_dataclass` annotations.
 
 ---
 

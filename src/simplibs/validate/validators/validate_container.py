@@ -1,6 +1,5 @@
 from typing import Any, Callable, Collection
-# Outers
-from ..rules.base_class import Rule
+from simplibs.rules import Rule
 # Inners
 from .rules.container_rule import container_rule
 

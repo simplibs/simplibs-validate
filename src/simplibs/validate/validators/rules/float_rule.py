@@ -1,7 +1,6 @@
 from typing import Any, Container
-# Outers
-from ...rules.base_class import Rule
-from ...rules import (
+from simplibs.rules import (
+    Rule,
     AllOf,
     NoneOf,
     is_float as _is_float,

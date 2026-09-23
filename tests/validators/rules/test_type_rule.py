@@ -1,6 +1,6 @@
 """Tests for the type_rule composition factory."""
 
-from simplibs.validate.testing import assert_rule_contract
+from simplibs.rules.testing import assert_rule_contract
 from simplibs.validate.validators.rules import type_rule
 
 
@@ -24,7 +24,6 @@ def test_type_rule_default_contract(subtests):
         valid_values=[int, str, BaseService, object],
         invalid_values=[123, "str", BaseService(), None],
         rule_factory=type_rule,
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )
@@ -45,7 +44,6 @@ def test_type_rule_subclass_and_membership(subtests):
             int,             # Fails subclass_of
             "AuthService",   # Not a type
         ],
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )

@@ -1,8 +1,7 @@
 from typing import Any
 from simplibs.sentinels import UNSET, UnsetType
-# Outers
-from ...rules.base_class import Rule
-from ...rules import (
+from simplibs.rules import (
+    Rule,
     AllOf,
     is_instance as _is_instance,
     has_length as _has_length,

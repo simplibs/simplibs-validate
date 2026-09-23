@@ -1,7 +1,7 @@
 """Tests for the number_rule composition factory."""
 
 from decimal import Decimal
-from simplibs.validate.testing import assert_rule_contract
+from simplibs.rules.testing import assert_rule_contract
 from simplibs.validate.validators.rules import number_rule
 
 
@@ -13,7 +13,6 @@ def test_number_rule_default_contract(subtests):
         valid_values=[10, 3.14, Decimal("42.5"), complex(1, 2)],
         invalid_values=[True, False, "123", None, [10]],
         rule_factory=number_rule,
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )
@@ -37,7 +36,6 @@ def test_number_rule_numeric_constraints(subtests):
             13,           # Fails not_in
             150,          # Fails less_or_equal
         ],
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )

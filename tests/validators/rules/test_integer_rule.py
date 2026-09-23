@@ -1,6 +1,6 @@
 """Tests for the integer_rule composition factory."""
 
-from simplibs.validate.testing import assert_rule_contract
+from simplibs.rules.testing import assert_rule_contract
 from simplibs.validate.validators.rules import integer_rule
 
 
@@ -12,7 +12,6 @@ def test_integer_rule_default_contract(subtests):
         valid_values=[0, 42, -100],
         invalid_values=[3.14, True, False, "123", None, [1]],
         rule_factory=integer_rule,
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )
@@ -38,7 +37,6 @@ def test_integer_rule_ranges_and_divisibility(subtests):
             -6,      # Fails positive
             102,     # Outside in_range
         ],
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )

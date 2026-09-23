@@ -1,7 +1,7 @@
 """Tests for the mapping_rule composition factory."""
 
 from simplibs.sentinels import UNSET
-from simplibs.validate.testing import assert_rule_contract
+from simplibs.rules.testing import assert_rule_contract
 from simplibs.validate.validators.rules import mapping_rule
 
 
@@ -13,7 +13,6 @@ def test_mapping_rule_default_contract(subtests):
         valid_values=[{}, {"a": 1}],
         invalid_values=[[("a", 1)], "a:1", None, 123, {1, 2}],
         rule_factory=mapping_rule,
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )
@@ -27,7 +26,6 @@ def test_mapping_rule_has_key_none_sentinel_distinction(subtests):
         rule=mapping_rule(has_key=None),
         valid_values=[{None: "value"}, {None: 1, "a": 2}],
         invalid_values=[{}, {"a": 2}],
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )
@@ -51,7 +49,6 @@ def test_mapping_rule_keys_and_length_constraints(subtests):
             {"id": 1, "name": "A", "role": "r", "x": 1}, # Exceeds max_length=3
             {"name": "Alice", "role": "admin"},          # Missing "id"
         ],
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )

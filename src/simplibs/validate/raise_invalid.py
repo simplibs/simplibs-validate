@@ -1,7 +1,6 @@
 from typing import Any, Callable, NoReturn
-# Inners
-from .rules.base_class import Rule
-from .exceptions import build_validation_error
+from simplibs.exception import build_validation_error
+from simplibs.rules import Rule
 
 
 def raise_invalid(

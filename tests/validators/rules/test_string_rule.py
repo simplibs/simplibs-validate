@@ -1,6 +1,6 @@
 """Tests for the string_rule composition factory."""
 
-from simplibs.validate.testing import assert_rule_contract
+from simplibs.rules.testing import assert_rule_contract
 from simplibs.validate.validators.rules import string_rule
 
 
@@ -12,7 +12,6 @@ def test_string_rule_default_contract(subtests):
         valid_values=["hello", "", "123"],
         invalid_values=[123, 45.6, True, None, ["a"]],
         rule_factory=string_rule,
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )
@@ -39,7 +38,6 @@ def test_string_rule_combined_constraints(subtests):
             "user_admin_xyz",     # Fails ends_with
             "user_admin_system_sys", # Exceeds max_length
         ],
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )
@@ -53,7 +51,6 @@ def test_string_rule_is_blank_tristate(subtests):
         rule=string_rule(is_blank=True),
         valid_values=["", "   ", "\t\n"],
         invalid_values=["a", "  a  "],
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )
@@ -64,7 +61,6 @@ def test_string_rule_is_blank_tristate(subtests):
         rule=string_rule(is_blank=False),
         valid_values=["a", "  a  "],
         invalid_values=["", "   ", "\t\n"],
-        check_raise_invalid=True,
         deep_check=True,
         verbose=False,
     )

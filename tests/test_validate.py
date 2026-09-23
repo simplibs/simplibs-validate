@@ -1,8 +1,8 @@
 """Tests for the main validate() orchestrator function."""
 
 import pytest
-from simplibs.validate.exceptions import ValidationError
-from simplibs.validate.rules.base_class import Rule
+from simplibs.exception import ValidationError
+from simplibs.rules.base_class import Rule
 from simplibs.validate.validate import validate
 
 

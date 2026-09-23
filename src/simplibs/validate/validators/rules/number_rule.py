@@ -1,8 +1,6 @@
-# >>> src/simplibs/validate/validators/rules/number_rule.py
 from typing import Any, Container
-# Outers
-from ...rules.base_class import Rule
-from ...rules import (
+from simplibs.rules import (
+    Rule,
     AllOf,
     is_number as _is_number,
     greater_than as _greater_than,
