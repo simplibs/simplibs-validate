@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "simplibs-validate"
-version = "0.2.0"
+version = "0.2.1"
 description = "A powerful, composable, and developer-friendly validation framework for Python with detailed diagnostic telemetry."
 readme = "README.md"
 license = "MIT"
@@ -32,9 +32,9 @@ classifiers = [
     "Topic :: Software Development :: Testing",
 ]
 dependencies = [
-    "simplibs-exception>=1.1.2",
+    "simplibs-exception>=1.1.3",
     "simplibs-sentinels>=0.1.0",
-    "simplibs-rules>=0.2.0",
+    "simplibs-rules>=0.2.2",
 ]
 
 [[project.authors]]

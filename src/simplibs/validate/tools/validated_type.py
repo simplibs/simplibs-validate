@@ -1,4 +1,3 @@
-# >>> src/simplibs/validate/rules/typing/validated_type.py
 from typing import Annotated, Any, Callable
 # Outers
 from ...rules.base_class import Rule

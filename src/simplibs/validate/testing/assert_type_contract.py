@@ -1,8 +1,8 @@
+from collections.abc import Sequence
 from typing import Any
 from simplibs.rules import build_typing_rule
 from simplibs.rules.testing import assert_rule_contract
-
-# Internal import within simplibs-validate testing package
+# Inners
 from .assert_type_validate_call_integration import (
     assert_type_validate_call_integration,
 )
@@ -14,8 +14,8 @@ def assert_type_contract(
     valid_values: list[Any],
     invalid_values: list[Any],
     *,
-    expected_error_name: str | None = None,
-    expected_exception_type: type[Exception] | None = None,
+    expected_error_name: str | Sequence[str | None] | None = None,
+    expected_exception_type: type[Exception] | Sequence[type[Exception] | None] | None = None,
     sample_label: str = "target_var",
     sample_context: str = "test_execution_context",
     check_value: bool = True,
@@ -43,10 +43,12 @@ def assert_type_contract(
         valid_values: Values that must satisfy the type.
         invalid_values: Values that must fail the type and produce a diagnostic
             exception.
-        expected_error_name: If provided, asserted against every raised
-            exception's error_name.
-        expected_exception_type: If provided, asserted against every raised
-            exception's wrapped `exception` attribute.
+        expected_error_name: If provided, asserted against raised exceptions. Can be
+            a single string (checked for all invalid values) or a Sequence matching
+            invalid_values index-by-index (use None to skip specific indices).
+        expected_exception_type: If provided, asserted against raised exceptions'
+            wrapped exception types. Can be a single exception class or a Sequence
+            matching invalid_values index-by-index (use None to skip specific indices).
         sample_label: The value_name used when probing build_exception().
         sample_context: The context used when probing build_exception().
         check_value: If True, asserts that exc.value strictly matches the raw

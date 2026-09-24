@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.1] - 2026-09-24
+
+### 📋 Improved
+
+#### Testing Utils (`simplibs.validate.testing`)
+
+* **Enhanced Contract Assertions for `Sequence` Inputs in `assert_type_contract`**:
+  * Updated type annotations and parameter passing for `expected_error_name` and `expected_exception_type` to accept index-matched `Sequence` instances (or `Sequence[... | None]`).
+  * Aligned `assert_type_contract` with `simplibs-rules` (v0.2.2) to support multi-error types where different invalid inputs trigger distinct underlying diagnostic error names or exception types.
+
+---
+
 ## [0.2.0] - 2026-09-23
 
 ### ⚠️ Breaking Changes

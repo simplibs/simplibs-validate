@@ -26,10 +26,42 @@ class DummyPositiveIntRule(Rule):
             value=value,
             context=context,
             error_name="NOT_POSITIVE_INT",
+            exception=ValueError,
         )
 
 
 ValidAnnotatedType = Annotated[int, DummyPositiveIntRule()]
+
+
+class DummyCompoundRule(Rule):
+    """Rule returning different error names and exception types based on value."""
+
+    def is_valid(self, value: Any) -> bool:
+        return False
+
+    def build_exception(
+        self, value: Any, value_name: str = "value", context: str = ""
+    ) -> ValidationError:
+        if isinstance(value, str):
+            err_name = "TYPE_ERROR"
+            exc_type = TypeError
+        else:
+            err_name = "RANGE_ERROR"
+            exc_type = ValueError
+
+        return ValidationError(
+            problem="Invalid value.",
+            expected="Valid value.",
+            how_to_fix="Fix value.",
+            label=value_name,
+            value=value,
+            context=context,
+            error_name=err_name,
+            exception=exc_type,
+        )
+
+
+CompoundAnnotatedType = Annotated[Any, DummyCompoundRule()]
 
 
 class DummyBrokenTypeRule(Rule):
@@ -63,6 +95,22 @@ def test_assert_type_contract_full_success(subtests):
         valid_values=[1, 42],
         invalid_values=[-1, 0],
         expected_error_name="NOT_POSITIVE_INT",
+        expected_exception_type=ValueError,
+        check_validate_call=True,
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_assert_type_contract_sequence_metadata_success(subtests):
+    """Verify sequence-based expected_error_name and expected_exception_type through orchestrator."""
+    assert_type_contract(
+        subtests,
+        type_=CompoundAnnotatedType,
+        valid_values=[],
+        invalid_values=["bad_str", -10],
+        expected_error_name=["TYPE_ERROR", "RANGE_ERROR"],
+        expected_exception_type=[TypeError, ValueError],
         check_validate_call=True,
         deep_check=True,
         verbose=False,
