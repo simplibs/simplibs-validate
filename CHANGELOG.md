@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.0] - 2026-10-12
+
+### ⚠️ Breaking Changes
+
+* **`log_this` now shortens large values by default.** Arguments and results are rendered
+  with at most `max_items=10` items per container (nested ones included) and a total count,
+  e.g. `[a, b, ...] (48213 items)`; long strings and objects are cut at 200 characters.
+  Previously the full `repr` was logged. Pass `max_items=None` to restore the old behavior.
+* The success record now logs the already-rendered result (`"%s(%s) returned %s in %.4fs"`
+  instead of `%r`). Code or tests matching the raw log arguments of that record are affected.
+
+### ✨ Added
+
+* `log_this(max_items=10)` — limits how many items of a container are logged; `None` disables
+  the limit. An invalid value (not `None` or a positive integer) raises `ValueError` when the
+  decorator is applied.
+* Internal helper `build_repr_func`, plus an optional `repr_func` argument on
+  `format_bound_arguments` and `log_success` (default `repr`, so direct callers are unaffected).
+
+### 📋 Improved
+
+* **`log_this` formats nothing when nothing would be logged.** If neither the entry/success
+  level nor ERROR is enabled, the function is called directly. If only ERROR is enabled, the
+  call signature is built lazily, only when the call raises — it then reflects the arguments at
+  failure time. A failure record never raises: unrenderable arguments are logged as
+  `<arguments unavailable>` and the original exception propagates unchanged.
+* A failing `__repr__` of an argument or result can no longer break the decorated call.
+
+### 📚 Documentation
+
+* `README_DECORATORS.md` describes `max_items` and the no-cost-when-disabled behavior;
+  `_DESIGN_NOTES` of `log_this` and its helpers updated.
+
+---
+
 ## [0.2.1] - 2026-09-24
 
 ### 📋 Improved

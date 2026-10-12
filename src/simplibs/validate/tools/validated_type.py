@@ -1,6 +1,5 @@
 from typing import Annotated, Any, Callable
-# Outers
-from ...rules.base_class import Rule
+from simplibs.rules.base_class import Rule
 # Inners
 from ._validations import (
     raise_validated_type_missing_rule_error,

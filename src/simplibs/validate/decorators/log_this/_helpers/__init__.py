@@ -1,3 +1,4 @@
+from .build_repr_func import build_repr_func
 from .format_bound_arguments import format_bound_arguments
 from .get_context_info import get_context_info
 from .log_exception import log_exception
@@ -10,14 +11,15 @@ _DESIGN_NOTES = """
 # Log This Internal Helpers Sub-Package
 
 ## Purpose
-Shared execution and logging helpers used internally by `@log_this` to format 
-arguments, safely extract metadata, emit entry/exit/exception log records, and
-selectively unwrap previous `@log_this` layers.
+Shared execution and logging helpers used internally by `@log_this` to build a
+bounded `repr`, format arguments, safely extract metadata, emit entry/exit/exception
+log records, and selectively unwrap previous `@log_this` layers.
 
 ## Internal Components Registry
 
 | Component                | Type     | Description                                                                     |
 | :----------------------- | :------- | :------------------------------------------------------------------------------ |
+| `build_repr_func`        | Function | Builds the `value -> str` function that shortens large arguments and results.   |
 | `format_bound_arguments` | Function | Formats bound arguments into a masked, readable signature string.              |
 | `get_context_info`       | Function | Safely extracts function name and module metadata for logger initialization.   |
 | `log_exception`          | Function | Emits ERROR level records when wrapped functions raise exceptions.              |

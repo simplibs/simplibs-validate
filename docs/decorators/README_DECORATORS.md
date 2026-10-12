@@ -14,8 +14,6 @@ composition and convenience layers, not new validation mechanisms of their own.
 
 * [`validate_call`](#validate_call)
 * [`validate_dataclass`](#validate_dataclass)
-* [`validated_type`](#validated_type)
-* [`override_rules`](#override_rules)
 * [`log_this`](#log_this)
 
 [⬅️ Back to main README](../../README.md#-tools)
@@ -132,76 +130,6 @@ what `__init__` is.
 
 ---
 
-### `validated_type`
-
-A small helper for defining a reusable "type + validation rule" once, under a name,
-instead of repeating `Annotated[int, greater_than(0)]` everywhere that constraint is
-needed:
-
-```python
-PositiveInt = validated_type(int, greater_than(0))
-
-def register(age: PositiveInt) -> None: ...
-```
-
-**What it actually does.** Builds and returns `Annotated[type_, *rules]` — nothing
-more. It performs no validation itself; the resulting annotation is only ever
-decomposed later, whenever something that understands `Annotated` metadata
-(`IsTyping`, `validate_call`, `validate_dataclass`) actually processes it. This keeps
-`validated_type` a pure naming convenience, not a second validation mechanism running
-alongside the real one.
-
-**Multiple rules, two equivalent styles.** You can pass several rules as separate
-positional arguments (`validated_type(int, is_integer, greater_than(0))`), or
-pre-compose them with `&`/`|`/`~` into a single rule
-(`validated_type(int, is_integer & greater_than(0))`) — both produce the same result
-once decomposed, since every recognized `Rule`/callable item is combined via `AllOf`
-regardless of whether it arrived as one composed rule or several separate ones. Pick
-whichever reads more naturally for a given case; they can also be freely mixed in one
-call.
-
-**Validated eagerly, at the point you call it.** At least one rule is required —
-calling `validated_type(int)` with none is treated as a likely mistake (you'd
-otherwise just write `int` directly) and raised immediately. Every given rule is also
-checked at that point: it must be either a `Rule` instance or a plain callable, or the
-call fails right there, naming exactly which positional rule was invalid — not left to
-silently do nothing the first time validation is eventually attempted.
-
----
-
-### `override_rules`
-
-A small helper for building the `overrides=` mapping `validate_call`/
-`validate_dataclass` expect, when several parameters need extra rules at once:
-
-```python
-my_overrides = override_rules(
-    param1=is_integer & greater_than(0),
-    param2=is_string,
-    param3=lambda value: value != "forbidden",
-)
-
-@validate_call(overrides=my_overrides)
-def some_func(param1: int, param2: str, param3: Any): ...
-```
-
-**Keyword arguments as the mapping itself.** Each keyword argument name becomes the
-parameter name the rule applies to, and its value is the rule — there's no separate
-positional/tuple syntax to learn, since Python's own `**kwargs` mechanism already
-provides exactly this shape. A plain callable value is automatically wrapped so it
-behaves like a proper rule; a `Rule` instance is used exactly as given. Every value is
-checked at the point `override_rules(...)` is called — it must be a `Rule` instance or
-callable, or the call fails immediately, naming which parameter's value was invalid.
-
-**No `type` argument, on purpose.** `overrides=` is always combined with whatever a
-parameter's own annotation already establishes — an override never replaces or
-introduces a type on its own. If you want to pair a fresh type with a rule under one
-name, that's what `validated_type` is for; `override_rules` exists purely to *add*
-constraints to parameters that already have (or intentionally don't have) their own
-annotation.
-
----
-
 ### `log_this`
 
 A decorator that gives any function entry/exit/timing/exception logging, without
@@ -238,14 +166,30 @@ not something that should show up unprompted in a typical production log
 configuration (which commonly filters below `INFO`). Pass `level=logging.INFO` (or
 any other level) explicitly if you want these visible by default.
 
+**Large values are shortened by default.** A decorated function that receives or returns
+a big collection — say a list of 50 000 paths — would otherwise write all of it into the
+log on every call. `log_this` therefore shows at most 10 items per container (nested ones
+included) and states the total, e.g. `[PosixPath('a.py'), PosixPath('b.py'), ...] (48213 items)`;
+very long strings and objects are cut at 200 characters, so ordinary values such as paths
+or short strings are never touched. The decorated function's real arguments and return
+value are never modified — only what is written to the log. Use `max_items` to change the
+limit, or `max_items=None` to log everything.
+
+**Costs almost nothing when it isn't logging.** If the entry/success level is disabled
+(the default `DEBUG` under a production logger filtering at `INFO`), `log_this` formats
+nothing: no argument binding, no `repr`. The call signature for a failure record is built
+only when the call actually raises, and describes the arguments as they are at that moment.
+
 **What you can adjust.** `exclude` masks named parameters (replacing their value with
 `***` in the logged call signature) — the one setting genuinely worth knowing about
-for anything touching secrets or credentials. `log_result=False` omits the return
-value from the success record, useful when it's large or sensitive, without losing
-the timing information. `log_exceptions=False` turns off the failure record entirely
-(the exception itself is still always re-raised, regardless). `logger=` lets you
-supply your own `Logger` instance instead of the automatically derived one, for the
-rare case you want several decorated functions sharing one logger.
+for anything touching secrets or credentials; a masked value is never even rendered.
+`max_items` (default `10`) limits how many items of a container are shown in arguments and
+result, `None` disables the limit. `log_result=False` omits the return value from the
+success record, useful when it is sensitive, without losing the timing information.
+`log_exceptions=False` turns off the failure record entirely (the exception itself is
+still always re-raised, regardless). `logger=` lets you supply your own `Logger`
+instance instead of the automatically derived one, for the rare case you want several
+decorated functions sharing one logger.
 
 **Works on `async def` functions too.** The timing and logging wrap around the actual
 `await`, not just the moment the coroutine object is created — so elapsed time and the

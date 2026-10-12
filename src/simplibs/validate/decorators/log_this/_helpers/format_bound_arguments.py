@@ -1,10 +1,12 @@
 from inspect import BoundArguments
+from typing import Any, Callable
 
 
 def format_bound_arguments(
     bound: BoundArguments,
     *,
-    exclude: tuple[str, ...]
+    exclude: tuple[str, ...],
+    repr_func: Callable[[Any], str] = repr,
 ) -> str:
     """Format bound call arguments as a readable, maskable "key=value, ..." string.
 
@@ -12,6 +14,8 @@ def format_bound_arguments(
         bound: The function call's bound arguments (defaults already applied).
         exclude: Parameter names whose value is replaced with a "***" mask
             instead of its repr — for secrets that must never reach a log.
+        repr_func: Turns a value into its logged text. Defaults to plain
+            `repr`; log_this passes a bounded one so huge arguments stay short.
 
     Returns:
         A single string like "name='chris', age=30, password=***", in
@@ -20,7 +24,7 @@ def format_bound_arguments(
     """
     # 1. One "name=repr" (or "name=***") fragment per bound parameter
     parts = [
-        f"{name}=***" if name in exclude else f"{name}={value!r}"
+        f"{name}=***" if name in exclude else f"{name}={repr_func(value)}"
         for name, value in bound.arguments.items()
     ]
 
@@ -44,15 +48,16 @@ log_this's equivalent of "what did this call look like".
 value with a fixed `***` before it ever becomes part of a string. This
 guarantees a masked parameter's actual value never touches any log
 handler, anywhere, rather than relying on a downstream logging filter to
-scrub it after the fact.
+scrub it after the fact. A masked value is never passed to `repr_func`
+at all — so it is not even rendered, let alone logged.
 
 ---
 
-## 2. `repr()`, Not `str()`
+## 2. `repr_func` Defaults to `repr`
 
-`repr(value)` is used for every non-masked value, matching Python's own
-convention for debug-oriented output — the same choice ValidationError's
-own diagnostic cards make when displaying a failing value.
+`repr` (not `str`) is the debug-oriented convention. log_this injects a
+bounded variant (see build_repr_func) so one huge argument cannot produce a
+huge log line; calling this function without it keeps the old behavior.
 
 ---
 
@@ -61,5 +66,5 @@ own diagnostic cards make when displaying a failing value.
 BoundArguments already collects a function's `*args`/`**kwargs`
 parameters into a tuple/dict under their own parameter name — no
 special-casing was needed here; they format through the same
-`{name}={value!r}` path as any other parameter.
+`{name}={repr_func(value)}` path as any other parameter.
 """
