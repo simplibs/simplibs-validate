@@ -35,6 +35,11 @@ plain type (`int`, `str`), a typing generic (`list[int]`, `dict[str, int]`), a u
 `validated_type`). Parameters with no annotation at all are simply skipped, unless
 they're named in `overrides`.
 
+**One-shot iterators.** An `Iterable[T]` annotation checks the value item by item, which
+would consume a generator, so it is **rejected** with a clear error rather than passed on
+exhausted. To accept a generator, annotate plain `Iterable`; to have its items checked,
+pass a `list`/`tuple`/`set` (or annotate `Collection[T]`).
+
 **Two ways to apply it.** As a bare decorator (`@validate_call`), or called with
 keyword arguments (`@validate_call(check=..., overrides=..., check_return=...)`) —
 both forms produce a function whose full original signature (parameter names, types,
@@ -65,16 +70,16 @@ after the function runs; if the function has no return annotation at all,
 `check_return=True` is treated as a mistake and raised at decoration time, the same
 way an unchecked `check` entry is.
 
-**Skipping validation per call with a `validate` parameter.** If the decorated
-function itself declares a parameter literally named `validate` (with no annotation,
+**Skipping validation per call with a `_validate_call` parameter.** If the decorated
+function itself declares a parameter literally named `_validate_call` (with no annotation,
 or an explicit `bool` annotation), its value at call time acts as a bypass switch:
-passing `validate=False` skips every check — both parameters and return value — for
+passing `_validate_call=False` skips every check — both parameters and return value — for
 that one call, while the function's own logic still runs normally. This exists for
 functions that are sometimes called directly (where validation is wanted) and
 sometimes called from code that has already validated the same data upstream (where
 re-validating would just be wasted work). Functions that don't declare this parameter
 always validate — the bypass is opt-in per function, never assumed, and the
-`validate` parameter itself is passed through to the function body unchanged, so the
+`_validate_call` parameter itself is passed through to the function body unchanged, so the
 function can inspect or forward it if it wants to.
 
 **Works on `async def` functions too**, with no change in how you write your

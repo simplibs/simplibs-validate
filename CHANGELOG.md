@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.1] - 2026-10-13
+
+### 🔄 Changed
+
+* Requires `simplibs-rules>=0.4.0`. `validate_call` / `validate_dataclass` with an
+  `Iterable[T]` annotation now reject generators and other one-shot iterators instead of
+  consuming them.
+
+### 📚 Documentation
+
+* `README_DECORATORS.md`: documented the one-shot iterator behavior and corrected the name
+  of the per-call bypass parameter (`_validate_call`).
+
+---
+
 ## [0.3.0] - 2026-10-12
 
 ### ⚠️ Breaking Changes
