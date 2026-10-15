@@ -2,6 +2,7 @@ import logging
 from unittest.mock import MagicMock
 import pytest
 
+from simplibs.exception import ParamError
 from simplibs.validate.decorators.log_this import log_this
 
 
@@ -249,7 +250,7 @@ def test_log_this_max_items_none_logs_everything() -> None:
 @pytest.mark.parametrize("invalid", [0, -5, True, "10"])
 def test_log_this_invalid_max_items_raises_at_decoration_time(invalid: object) -> None:
     """Verify a wrong max_items fails when the decorator is applied, not on first call."""
-    with pytest.raises(ValueError, match="max_items"):
+    with pytest.raises(ParamError):
         @log_this(max_items=invalid)  # type: ignore[arg-type]
         def func() -> None: ...
 

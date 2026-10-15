@@ -96,7 +96,7 @@ def log_this(
         The wrapped function, logging on every call.
 
     Raises:
-        ValueError: If `max_items` is neither `None` nor a positive integer
+        ParamError: If `max_items` is neither `None` nor a positive integer
             (raised when the decorator is applied, not on first call).
     """
 

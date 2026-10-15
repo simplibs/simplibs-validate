@@ -2,6 +2,8 @@ import reprlib
 from collections import deque
 from itertools import islice
 from typing import Any, Callable
+# Outers
+from .._validations import raise_invalid_max_items
 
 # Exact builtin container types that get an item limit and a total count.
 # Subclasses (defaultdict, namedtuple, ...) fall through to reprlib's generic
@@ -63,7 +65,7 @@ def build_repr_func(max_items: int | None) -> Callable[[Any], str]:
         A function returning a bounded (or plain) `repr` of any value.
 
     Raises:
-        ValueError: If `max_items` is neither `None` nor a positive integer.
+        ParamError: If `max_items` is neither `None` nor a positive integer.
     """
 
     # 1. No limit requested: plain repr
@@ -72,9 +74,7 @@ def build_repr_func(max_items: int | None) -> Callable[[Any], str]:
 
     # 2. Reject anything that is not a positive int (bool is an int subclass)
     if isinstance(max_items, bool) or not isinstance(max_items, int) or max_items < 1:
-        raise ValueError(
-            f"log_this: `max_items` must be None or a positive integer, got {max_items!r}."
-        )
+        raise_invalid_max_items(max_items)
 
     # 3. Limited repr
     return _LimitedRepr(max_items).repr

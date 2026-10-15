@@ -3,6 +3,7 @@ from collections import deque
 from pathlib import PurePosixPath
 import pytest
 
+from simplibs.exception import ParamError
 from simplibs.validate.decorators.log_this._helpers import build_repr_func
 
 
@@ -47,7 +48,7 @@ def test_none_survives_broken_repr() -> None:
 @pytest.mark.parametrize("invalid", [0, -1, True, False, "3", 2.5])
 def test_invalid_max_items_raises(invalid: object) -> None:
     """Verify anything except None or a positive int is rejected immediately."""
-    with pytest.raises(ValueError, match="max_items"):
+    with pytest.raises(ParamError):
         build_repr_func(invalid)  # type: ignore[arg-type]
 
 

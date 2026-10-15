@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.2] - 2026-10-15
+
+### 🔄 Changed
+
+* `log_this`: an invalid `max_items` (anything other than `None` or a positive integer, a `bool`
+  included) now raises a structured `ParamError` (`LOG_THIS_INVALID_MAX_ITEMS_ERROR`) instead of
+  a bare `ValueError`, consistent with the other decoration-time configuration errors of this
+  package (`raise_no_rule_for_checked_param`, `raise_no_rule_for_return`). It is still raised
+  when the decorator is applied, not on the first call. Code catching `ValueError` around
+  `@log_this(max_items=...)` needs to catch `ParamError` instead.
+
+### ✨ Added
+
+* Internal diagnostic helper `raise_invalid_max_items` in `log_this/_validations/`, with its
+  own contract test.
+
+### 📚 Documentation
+
+* `_DESIGN_NOTES` and the docstrings of `log_this` and `build_repr_func` updated to name
+  `ParamError`.
+
+---
+
 ## [0.3.1] - 2026-10-13
 
 ### 🔄 Changed
