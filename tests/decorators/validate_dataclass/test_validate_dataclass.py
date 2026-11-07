@@ -125,3 +125,23 @@ def test_validate_dataclass_prevents_double_wrapping() -> None:
 
     # Ověříme, že __init__ má správně nastavený indikátor wrapperu
     assert getattr(User.__init__, "_is_validate_dataclass_wrapper", False) is True
+
+
+def test_validate_dataclass_marker_without_wrapped_reference_is_still_handled() -> None:
+    """Verify a wrapper that carries the marker but lost its __wrapped__ link does not hang the unwrap loop."""
+
+    @validate_dataclass
+    @dataclass
+    class User:
+        name: str
+        age: int
+
+    # Simulate a broken wrapper chain: marker present, __wrapped__ missing
+    del User.__init__.__wrapped__
+
+    validate_dataclass(User)
+
+    assert User("Alice", 30).age == 30
+
+    with pytest.raises(ValidationError):
+        User("Alice", "thirty")

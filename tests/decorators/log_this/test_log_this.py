@@ -415,6 +415,22 @@ async def test_log_this_async_failure_formats_arguments_lazily() -> None:
     assert "value=counted" in mock_logger.error.call_args.args[2]
 
 
+async def test_log_this_async_success_formats_nothing_when_only_error_enabled() -> None:
+    """Verify the usual production state (DEBUG off, ERROR on) formats nothing for a successful async call."""
+    mock_logger = _silent_logger(enabled={logging.ERROR})
+    spy = _CountingRepr()
+
+    @log_this(logger=mock_logger)
+    async def echo(value: object) -> object:
+        return value
+
+    assert await echo(spy) is spy
+
+    assert spy.calls == 0
+    mock_logger.log.assert_not_called()
+    mock_logger.error.assert_not_called()
+
+
 # ============================================================================
 # Integration with a real logger
 # ============================================================================

@@ -68,3 +68,87 @@ def test_float_rule_numeric_constraints(subtests):
         deep_check=True,
         verbose=False,
     )
+
+
+def test_float_rule_negative_flag(subtests):
+    """Verify negative=True means strictly below zero (zero itself is not negative)."""
+    assert_rule_contract(
+        subtests,
+        rule=float_rule(negative=True),
+        valid_values=[-0.1, -42.5],
+        invalid_values=[0.0, 3.14, -math.inf, -1],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_float_rule_greater_or_equal(subtests):
+    """Verify greater_or_equal includes the bound itself."""
+    assert_rule_contract(
+        subtests,
+        rule=float_rule(greater_or_equal=2.5),
+        valid_values=[2.5, 3.0],
+        invalid_values=[2.4, -1.0],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_float_rule_less_than(subtests):
+    """Verify less_than excludes the bound itself."""
+    assert_rule_contract(
+        subtests,
+        rule=float_rule(less_than=2.5),
+        valid_values=[2.4, -1.0],
+        invalid_values=[2.5, 3.0],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_float_rule_in_range_is_inclusive(subtests):
+    """Verify in_range=(min, max) accepts both bounds."""
+    assert_rule_contract(
+        subtests,
+        rule=float_rule(in_range=(1.0, 2.0)),
+        valid_values=[1.0, 1.5, 2.0],
+        invalid_values=[0.9, 2.1, "1.5"],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_float_rule_equals(subtests):
+    """Verify equals accepts only the exact float."""
+    assert_rule_contract(
+        subtests,
+        rule=float_rule(equals=1.5),
+        valid_values=[1.5],
+        invalid_values=[1.6, 0.0, 1],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_float_rule_is_in(subtests):
+    """Verify is_in accepts only the listed floats."""
+    assert_rule_contract(
+        subtests,
+        rule=float_rule(is_in={1.5, 2.5}),
+        valid_values=[1.5, 2.5],
+        invalid_values=[3.5, 0.0],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_float_rule_not_in(subtests):
+    """Verify not_in rejects the listed floats."""
+    assert_rule_contract(
+        subtests,
+        rule=float_rule(not_in={1.5, 2.5}),
+        valid_values=[3.5, 0.0],
+        invalid_values=[1.5, 2.5],
+        deep_check=True,
+        verbose=False,
+    )

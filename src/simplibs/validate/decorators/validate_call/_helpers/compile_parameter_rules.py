@@ -5,6 +5,7 @@ from simplibs.rules import Rule, AllOf, UserRule, build_typing_rule
 from .._validations import raise_no_rule_for_checked_param
 # Inners
 from .is_bypass_parameter import is_bypass_parameter
+from .resolve_parameter_annotation import resolve_parameter_annotation
 
 
 def compile_parameter_rules(
@@ -70,7 +71,7 @@ def compile_parameter_rules(
         # 2.5 Process type annotation rule
         parts: list[Rule] = []
         if has_annotation:
-            parts.append(build_typing_rule(param.annotation))
+            parts.append(build_typing_rule(resolve_parameter_annotation(param)))
 
         # 2.6 Process override additions — a plain callable is wrapped in UserRule
         if override is not None:
@@ -127,4 +128,18 @@ which a plain callable does not have. UserRule exists specifically to
 give an arbitrary callable that missing Rule contract, so failure
 diagnostics work identically whether an override came from a Rule
 instance or a plain predicate function.
+
+---
+
+## 4. Variadic Parameters — Annotation Describes Each Item
+
+`*args: X` and `**kwargs: X` annotate every single item, but
+`bound.arguments` holds one tuple / one dict. The annotation is therefore
+first passed through resolve_parameter_annotation (-> `tuple[X, ...]` /
+`dict[str, X]`) before build_typing_rule sees it, so users write the natural
+`*sources: X` and type checkers keep seeing the correct signature.
+
+An override for such a parameter applies to the **whole** tuple / dict (the
+value the function body sees), so collection-level rules such as
+`HasLength(min_length=1)` work; item-level rules are written with ForEach.
 """

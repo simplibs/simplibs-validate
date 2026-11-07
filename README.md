@@ -3,6 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/v/simplibs-validate)](https://pypi.org/project/simplibs-validate/)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
 [![Licence](https://img.shields.io/badge/licence-MIT-green)](https://github.com/simplibs/simplibs-validate/blob/main/LICENSE)
+[![tests](https://github.com/simplibs/simplibs-validate/actions/workflows/tests.yml/badge.svg)](https://github.com/simplibs/simplibs-validate/actions)
 
 **The validation layer on top of [`simplibs-rules`](https://pypi.org/project/simplibs-rules/) — entry points, ready-made validators, and self-validating decorators.**
 
@@ -241,7 +242,10 @@ logging directly to functions and dataclasses:
 
 * **`validate_call`** — validates a function's arguments (and optionally its return
   value) against its own type annotations, on every call. Supports selective
-  validation (`check`), extra constraints (`overrides`), and a per-call bypass switch.
+  validation (`check`), extra constraints (`overrides`), a per-call bypass switch,
+  natural `*args` / `**kwargs` annotations, and an opt-in `materialize_iterators`
+  that turns one-shot iterators into tuples instead of rejecting them. String annotations
+  (`from __future__ import annotations`) and forward references are supported.
 * **`validate_dataclass`** — the `@dataclass` counterpart: validates every field
   against its annotation on instance construction, before any field is assigned.
 * **`log_this`** — gives any function entry/exit/timing/exception logging, entirely

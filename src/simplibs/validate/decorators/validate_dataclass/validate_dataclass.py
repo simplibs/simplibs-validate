@@ -4,7 +4,7 @@ import inspect
 from typing import Any, Callable, TypeVar, overload
 from simplibs.rules import Rule
 # Outers
-from ..validate_call import compile_parameter_rules
+from ..validate_call import compile_parameter_rules, lazy_signature_state
 # Inners
 from ._helpers import get_dataclass_context_string
 from ._validations import raise_not_a_dataclass_error
@@ -104,9 +104,17 @@ def validate_dataclass(
         original_init = next_layer
 
     # 4. Compile every field's Rule once, at decoration time — reusing
-    #    validate_call's own per-parameter compiler unchanged
+    #    validate_call's own per-parameter compiler unchanged. Binding uses the
+    #    plain signature; rules are built from the resolved one — at decoration
+    #    time when every annotation resolves, otherwise on the first construction
+    #    (a field may be annotated with the class itself or with a later class)
     signature = inspect.signature(original_init)
-    compiled = compile_parameter_rules(original_init, signature, check=check, overrides=overrides or {})
+    get_compiled = lazy_signature_state(
+        original_init,
+        lambda resolved: compile_parameter_rules(
+            original_init, resolved, check=check, overrides=overrides or {}
+        ),
+    )
     context = get_dataclass_context_string(cls)
 
     # 5. Wrap __init__ — validates raw constructor arguments before any
@@ -115,7 +123,10 @@ def validate_dataclass(
     @functools.wraps(original_init)
     def wrapper(self: C, *args: Any, **kwargs: Any) -> None:
 
-        # 5.1 Bind call arguments to signature
+        # 5.1 Rules (cached after the first construction)
+        compiled = get_compiled()
+
+        # 5.1.1 Bind call arguments to signature
         bound = signature.bind(self, *args, **kwargs)
         bound.apply_defaults()
 
@@ -238,4 +249,15 @@ per-call reason to skip validation the way a repeatedly-invoked function
 does (see `create_act.py`'s own design notes for why that mechanism
 exists where it does). Add one later if a concrete need appears; nothing
 here forecloses it.
+
+---
+
+## 8. String Annotations and Forward References
+
+With `from __future__ import annotations` every field annotation is a string,
+and a field may refer to the class itself (`parent: Node | None`) or to a class
+defined further down — names that do not exist yet when this decorator runs.
+Rules are therefore built through validate_call's lazy_signature_state: at
+decoration time when every annotation resolves, otherwise on the first
+construction (cached afterwards). See validate_call's design notes, section 11.
 """

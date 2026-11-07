@@ -39,3 +39,87 @@ def test_number_rule_numeric_constraints(subtests):
         deep_check=True,
         verbose=False,
     )
+
+
+def test_number_rule_negative_flag(subtests):
+    """Verify negative=True means strictly below zero across numeric types."""
+    assert_rule_contract(
+        subtests,
+        rule=number_rule(negative=True),
+        valid_values=[-1, -0.5, Decimal("-3")],
+        invalid_values=[0, 1, Decimal("2"), "-1"],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_number_rule_greater_or_equal(subtests):
+    """Verify greater_or_equal includes the bound itself across numeric types."""
+    assert_rule_contract(
+        subtests,
+        rule=number_rule(greater_or_equal=5),
+        valid_values=[5, 5.5, Decimal("6")],
+        invalid_values=[4, 4.9, Decimal("1")],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_number_rule_less_than(subtests):
+    """Verify less_than excludes the bound itself across numeric types."""
+    assert_rule_contract(
+        subtests,
+        rule=number_rule(less_than=5),
+        valid_values=[4, 4.5, Decimal("-1")],
+        invalid_values=[5, 5.1, Decimal("9")],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_number_rule_in_range_is_inclusive(subtests):
+    """Verify in_range=(min, max) accepts both bounds across numeric types."""
+    assert_rule_contract(
+        subtests,
+        rule=number_rule(in_range=(1, 10)),
+        valid_values=[1, 5.5, Decimal("10")],
+        invalid_values=[0, 10.5, Decimal("11")],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_number_rule_equals(subtests):
+    """Verify equals accepts numerically equal values of different numeric types."""
+    assert_rule_contract(
+        subtests,
+        rule=number_rule(equals=5),
+        valid_values=[5, 5.0, Decimal("5")],
+        invalid_values=[6, 4.9],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_number_rule_is_in(subtests):
+    """Verify is_in accepts only the listed numbers."""
+    assert_rule_contract(
+        subtests,
+        rule=number_rule(is_in={1, 2.5}),
+        valid_values=[1, 2.5],
+        invalid_values=[3, 0],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_number_rule_comparison_with_complex_is_invalid_not_a_crash(subtests):
+    """Verify complex numbers (not orderable) are reported as invalid instead of raising."""
+    assert_rule_contract(
+        subtests,
+        rule=number_rule(greater_than=0),
+        valid_values=[1, 2.5, Decimal("3")],
+        invalid_values=[complex(1, 2), 0, -1],
+        deep_check=True,
+        verbose=False,
+    )

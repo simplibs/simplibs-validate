@@ -7,26 +7,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.3.2] - 2026-10-15
+## [0.4.0] - 2026-11-07
 
-### 🔄 Changed
+### ⚠️ Breaking Changes
 
-* `log_this`: an invalid `max_items` (anything other than `None` or a positive integer, a `bool`
-  included) now raises a structured `ParamError` (`LOG_THIS_INVALID_MAX_ITEMS_ERROR`) instead of
-  a bare `ValueError`, consistent with the other decoration-time configuration errors of this
-  package (`raise_no_rule_for_checked_param`, `raise_no_rule_for_return`). It is still raised
-  when the decorator is applied, not on the first call. Code catching `ValueError` around
-  `@log_this(max_items=...)` needs to catch `ParamError` instead.
+* **`*args: X` and `**kwargs: X` now annotate each item / value**, as in ordinary Python typing.
+  Previously the rule built from `X` was applied to the whole tuple / dict, so such a parameter
+  could not be written naturally and the only way out was a wrapper annotation such as
+  `*args: tuple[X, ...]`. Code that uses that workaround must drop the wrapper
+  (`*args: X`) — with the new behavior `tuple[X, ...]` would mean "every item is itself a tuple".
+  Unannotated `*args` / `**kwargs` are still skipped, exactly as before.
 
 ### ✨ Added
 
-* Internal diagnostic helper `raise_invalid_max_items` in `log_this/_validations/`, with its
-  own contract test.
+* `validate_call(materialize_iterators=False)` — opt-in alternative to rejecting one-shot
+  iterators. When `True`, a generator, `map`, `iter(...)` or similar passed to a parameter
+  annotated `Iterable[T]` (also `Iterable[T] | None` and `Annotated[...]`) is consumed once and
+  the function receives it as a `tuple`, so its items are still validated. Default behavior is
+  unchanged: such iterators are rejected. Details:
+  * only `Iterable[T]` parameters are converted — a plain `Iterable`, collections, and
+    everything else pass through untouched, so a function that wants a lazy iterator keeps it;
+  * with `_validate_call=False` nothing is converted;
+  * enabling the flag when no validated parameter is annotated `Iterable[T]` raises a
+    `ParamError` (`VALIDATE_CALL_NO_ITERABLE_PARAM_ERROR`), so the flag can never silently do
+    nothing.
+* `validate_call` and `validate_dataclass` resolve **string annotations** before building rules:
+  `x: "int"`, references nested in generics (`list["Node"]`), and whole modules using
+  `from __future__ import annotations`. Annotations that are already real objects are never
+  touched, so existing code behaves exactly as before. This also applies to `Iterable[T]`
+  detection for `materialize_iterators` and to the per-call bypass switch, which is recognized
+  whether `_validate_call: bool` is written as an object or as a string.
+* **Forward references.** A name that does not exist yet when the decorator runs — a method
+  annotated with its own class, a dataclass field typed with the class itself (`parent: Node | None`),
+  a class defined further down the module — no longer fails. The rules of that function are built
+  on its first call and cached; configuration errors of that one function (for example a `check`
+  entry without a rule) are then reported on that first call instead of when the decorator is
+  applied. Everything that can be resolved immediately keeps failing at decoration time.
+* A name that is still missing at that point (a class defined inside another function, an import
+  only under `TYPE_CHECKING`, a typo) raises a structured `ParamError`
+  (`VALIDATE_CALL_UNRESOLVABLE_ANNOTATION_ERROR`) naming the function, with the original
+  `NameError` attached as the cause. An annotation that can never be evaluated (invalid syntax)
+  is reported immediately, when the decorator is applied.
+* Internal helpers in `validate_call/_helpers/`: `resolve_parameter_annotation`,
+  `find_iterable_parameters`, `materialize_iterator_arguments`, `needs_annotation_resolution`,
+  `resolve_signature`, `lazy_signature_state`; and the diagnostic helpers
+  `raise_no_iterable_parameter` and `raise_unresolvable_annotation` in
+  `validate_call/_validations/` — each with its own test.
+
+### 🐛 Fixed
+
+* `validate_call` validated variadic parameters against the whole `args` tuple / `kwargs` dict
+  instead of each item, so `*args: int` or `*sources: A | B` always failed.
+* In a module with `from __future__ import annotations` (or with any string annotation),
+  `validate_call` and `validate_dataclass` failed when the decorator was applied with
+  `Annotation '...' is not a recognized type or typing construct`.
+
+### 🔄 Changed
+
+* Project tooling: `setuptools>=77.0.3` in `[build-system]`, `pytest-cov` added to the `dev`
+  extra, coverage configuration and `-rs` in pytest options; a tests status badge in the README.
+
+### 📋 Improved
+
+* Test suite for `validate_call` and its helpers extended: variadic parameters, default
+  `Iterable[T]` rejection, `materialize_iterators` (sync and async), the decoration-time guard,
+  and two test modules that use `from __future__ import annotations` themselves
+  (`validate_call`, `validate_dataclass`), covering forward references, self-referencing classes,
+  async functions and failure cases.
+* Tests for every previously unexercised constraint parameter of `float_rule`, `integer_rule`,
+  `number_rule`, `string_rule` and `type_rule`, plus the remaining `log_this` and
+  `validate_dataclass` branches; coverage is now measured.
 
 ### 📚 Documentation
 
-* `_DESIGN_NOTES` and the docstrings of `log_this` and `build_repr_func` updated to name
-  `ParamError`.
+* `README_DECORATORS.md` documents variadic parameters, `materialize_iterators`, and string
+  annotations with forward references for both decorators; the main README mentions them.
+  `_DESIGN_NOTES` of `validate_call`, `validate_dataclass` and the new helpers updated.
 
 ---
 

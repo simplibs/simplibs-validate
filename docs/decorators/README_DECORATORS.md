@@ -35,13 +35,53 @@ plain type (`int`, `str`), a typing generic (`list[int]`, `dict[str, int]`), a u
 `validated_type`). Parameters with no annotation at all are simply skipped, unless
 they're named in `overrides`.
 
+**String annotations and forward references.** Annotations written as strings — by hand
+(`x: "int"`) or all at once by `from __future__ import annotations` — are resolved before any
+rule is built, so they behave exactly like the real types, including references nested in
+generics (`list["Node"]`). A name that does not exist yet when the decorator runs (a method
+annotated with its own class, a class defined further down the module) is not an error: the
+rules for that function are built on its first call and kept from then on. The one consequence
+is that configuration mistakes of *that* function (for example a `check` entry without a rule)
+are reported on its first call instead of at decoration. A name that is still missing at that
+point — a class defined inside another function, or one imported only under `TYPE_CHECKING` —
+raises a `ParamError` naming the function, with the original `NameError` attached. Annotations
+that are already real objects are never touched, and the `_validate_call: bool` switch below is
+recognized whether its annotation is written as an object or as a string.
+
+**Variadic parameters.** For `*args: X` and `**kwargs: X`, the annotation describes each
+individual item or value, exactly as in ordinary Python typing — so
+`*sources: inspect.Parameter | Callable` simply means that every positional argument must be
+one of those, with no `tuple[...]` wrapper (and no forced bare `*`) needed to satisfy either
+the validator or your type checker. Internally the annotation becomes `tuple[X, ...]` /
+`dict[str, X]` before the rule is built. An entry in `overrides` for such a parameter applies
+to the *whole* tuple or dict — the value the function body sees — which is what makes
+collection-level rules such as "at least one argument" (`HasLength(min_length=1)`) possible;
+per-item rules go inside `ForEach(...)`. Unannotated `*args` / `**kwargs` are skipped like any
+other unannotated parameter.
+
 **One-shot iterators.** An `Iterable[T]` annotation checks the value item by item, which
 would consume a generator, so it is **rejected** with a clear error rather than passed on
-exhausted. To accept a generator, annotate plain `Iterable`; to have its items checked,
-pass a `list`/`tuple`/`set` (or annotate `Collection[T]`).
+exhausted. To accept a generator without checking its items, annotate plain `Iterable` (it is
+passed on lazily and untouched); to have its items checked, pass a `list`/`tuple`/`set` (or
+annotate `Collection[T]`).
+
+If you want to accept generators *and* have their items checked, opt in with
+`@validate_call(materialize_iterators=True)`. A one-shot iterator passed to an `Iterable[T]`
+parameter (also `Iterable[T] | None`, or inside `Annotated[...]`) is then consumed once,
+validated, and handed to the function as a `tuple`. Because the default stays "reject", the
+conversion always happens by your explicit choice and never silently. Worth knowing:
+
+* only parameters annotated `Iterable[T]` are converted — a plain `Iterable` stays lazy, and
+  lists, sets, ranges and other re-iterable values are passed through unchanged;
+* with `_validate_call=False` nothing is validated and nothing is converted;
+* an infinite or very large generator will hang or fill memory, as with any `tuple(...)`;
+* the flag on a function with no `Iterable[T]` parameter to act on (for example because
+  `check` excludes it) raises a `ParamError` when the decorator is applied;
+* not covered: `Iterable[T]` nested inside another annotation (`list[Iterable[int]]`),
+  `*xs: Iterable[int]`, and string (forward-reference) annotations.
 
 **Two ways to apply it.** As a bare decorator (`@validate_call`), or called with
-keyword arguments (`@validate_call(check=..., overrides=..., check_return=...)`) —
+keyword arguments (`@validate_call(check=..., overrides=..., check_return=..., materialize_iterators=...)`) —
 both forms produce a function whose full original signature (parameter names, types,
 return type) remains visible to IDEs and type checkers, not a generic
 `(*args, **kwargs)`.
@@ -120,6 +160,11 @@ signature. No separate rule-building logic exists for dataclasses; the same
 per-parameter compiler `validate_call` uses is reused unchanged. `check` and
 `overrides` work exactly as they do for `validate_call`, scoped to field names instead
 of parameter names.
+
+**String annotations and forward references** work as in `validate_call`: with
+`from __future__ import annotations`, or when a field is typed with the class itself
+(`parent: Node | None`) or with a class defined further down, the rules are built when the
+first instance is constructed and reused afterwards.
 
 **Validates before any field is assigned.** The wrapped `__init__` checks every
 constructor argument *before* calling the original `__init__` that actually assigns

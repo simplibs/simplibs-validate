@@ -36,3 +36,10 @@ def _make_param(name: str, annotation=inspect.Parameter.empty) -> inspect.Parame
 def test_is_bypass_parameter(param: inspect.Parameter, expected: bool) -> None:
     """Verify that is_bypass_parameter correctly identifies reserved bypass parameters."""
     assert is_bypass_parameter(param) is expected
+
+
+def test_is_bypass_parameter_string_bool_annotation() -> None:
+    """Verify the switch is recognized when its annotation is the string "bool"."""
+    param = inspect.Parameter("_validate_call", inspect.Parameter.KEYWORD_ONLY,
+                              default=True, annotation="bool")
+    assert is_bypass_parameter(param) is True

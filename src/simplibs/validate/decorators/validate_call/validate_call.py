@@ -3,11 +3,15 @@ import inspect
 from typing import Any, Callable, ParamSpec, TypeVar, overload
 from simplibs.rules import Rule
 # Inners
+from ._validations import raise_no_iterable_parameter
 from ._helpers import (
     compile_parameter_rules,
     compile_return_rule,
+    find_iterable_parameters,
     get_context_string,
     is_bypass_parameter,
+    lazy_signature_state,
+    materialize_iterator_arguments,
     should_validate,
     unwrap_validate_call,
 )
@@ -32,6 +36,7 @@ def validate_call(
     check: tuple[str, ...] | None = None,
     overrides: dict[str, Rule | Callable[[Any], bool]] | None = None,
     check_return: bool = False,
+    materialize_iterators: bool = False,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
 
 
@@ -45,6 +50,7 @@ def validate_call(
     check: tuple[str, ...] | None = None,
     overrides: dict[str, Rule | Callable[[Any], bool]] | None = None,
     check_return: bool = False,
+    materialize_iterators: bool = False,
 ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
     """Validate a function's arguments (and optionally its return value)
     against its own annotations at call time.
@@ -82,6 +88,13 @@ def validate_call(
         check_return: If True, the return value is also validated against
             the function's `-> ...` annotation. Raises at decoration time
             if True but no return annotation exists.
+        materialize_iterators: If True, a one-shot iterator (generator,
+            map, file, ...) passed to a parameter annotated as `Iterable[T]`
+            is consumed once and replaced by a tuple, instead of being
+            rejected — the function receives that tuple. Off by default, so
+            iterators stay rejected unless this is chosen consciously.
+            Parameters annotated as bare `Iterable`, and nested ones such
+            as `list[Iterable[int]]`, are not affected.
 
     Returns:
         The wrapped function, validating on every call.
@@ -90,7 +103,12 @@ def validate_call(
         ParamError: At decoration time, if `check` names a parameter that
             has neither an annotation nor an `overrides` entry, or if
             `check_return=True` is given but the function has no return
-            annotation.
+            annotation, or if `materialize_iterators=True` is given but no
+            validated parameter is annotated as `Iterable[T]`, or if an
+            annotation cannot be resolved. When an annotation refers to a name
+            that does not exist yet at decoration time (a class defined further
+            down the module, a method annotated with its own class), these
+            checks happen on the first call instead.
     """
 
     # 1. Support both @validate_call and @validate_call(...) syntax forms
@@ -100,78 +118,106 @@ def validate_call(
             check=check,
             overrides=overrides,
             check_return=check_return,
+            materialize_iterators=materialize_iterators,
         )
 
     # 2. Peel off existing @validate_call wrappers to prevent double validation
     raw_func = unwrap_validate_call(func)
 
-    # 3. Compile rules once at decoration time against the unwrapped function's signature
+    # 3. Binding needs only parameter names, which are always available
     signature = inspect.signature(raw_func)
-    compiled = compile_parameter_rules(raw_func, signature, check=check, overrides=overrides or {})
-    return_rule = compile_return_rule(raw_func, signature, check_return=check_return)
     context = get_context_string(raw_func)
     has_bypass = any(is_bypass_parameter(p) for p in signature.parameters.values())
 
-    # 4. Async functions need an async wrapper so the return-value rule
+    # 4. Rules need real annotation objects. They are built once — at decoration
+    #    time when every annotation can be resolved, otherwise on the first call
+    #    (a name used in an annotation may not exist yet while the module loads)
+    def build_state(resolved: inspect.Signature) -> tuple[dict[str, Rule], Rule | None, tuple[str, ...]]:
+        compiled = compile_parameter_rules(raw_func, resolved, check=check, overrides=overrides or {})
+        return_rule = compile_return_rule(raw_func, resolved, check_return=check_return)
+        iterable_names = (
+            find_iterable_parameters(resolved, frozenset(compiled)) if materialize_iterators else ()
+        )
+        if materialize_iterators and not iterable_names:
+            raise_no_iterable_parameter(raw_func)
+        return compiled, return_rule, iterable_names
+
+    get_state = lazy_signature_state(raw_func, build_state)
+
+    # 5. Async functions need an async wrapper so the return-value rule
     #    validates the awaited result, not a bare coroutine object
     if inspect.iscoroutinefunction(raw_func):
 
         @functools.wraps(raw_func)
         async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
 
-            # 4.1 Bind call arguments to signature
+            # 5.1 Rules (cached after the first call)
+            compiled, return_rule, iterable_names = get_state()
+
+            # 5.2 Bind call arguments to signature
             bound = signature.bind(*args, **kwargs)
             bound.apply_defaults()
             validate = should_validate(bound, has_bypass=has_bypass)
 
-            # 4.2 Validate arguments against parameter rules
+            # 5.3 Replace one-shot iterators (opt-in) before they are validated
+            if validate and materialize_iterator_arguments(bound, iterable_names):
+                args, kwargs = bound.args, bound.kwargs
+
+            # 5.3.1 Validate arguments against parameter rules
             if validate:
                 for name, value in bound.arguments.items():
                     rule = compiled.get(name)
                     if rule is not None:
                         rule.validate(value, value_name=name, context=context)
 
-            # 4.3 Execute target async function
+            # 5.4 Execute target async function
             result = await raw_func(*args, **kwargs)
 
-            # 4.4 Validate return value if requested
+            # 5.5 Validate return value if requested
             if validate and return_rule is not None:
                 return_rule.validate(result, value_name="return value", context=context)
 
-            # 4.5 Return validated result
+            # 5.6 Return validated result
             return result
 
-        # 4.6 Mark wrapper for future unwrap inspection
+        # 5.7 Mark wrapper for future unwrap inspection
         async_wrapper._is_validate_call_wrapper = True  # type: ignore[attr-defined]
         return async_wrapper
 
-    # 5. Plain synchronous wrapper
+    # 6. Plain synchronous wrapper
     @functools.wraps(raw_func)
     def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
 
-        # 5.1 Bind call arguments to signature
+        # 6.1 Rules (cached after the first call)
+        compiled, return_rule, iterable_names = get_state()
+
+        # 6.2 Bind call arguments to signature
         bound = signature.bind(*args, **kwargs)
         bound.apply_defaults()
         validate = should_validate(bound, has_bypass=has_bypass)
 
-        # 5.2 Validate arguments against parameter rules
+        # 6.3 Replace one-shot iterators (opt-in) before they are validated
+        if validate and materialize_iterator_arguments(bound, iterable_names):
+            args, kwargs = bound.args, bound.kwargs
+
+        # 6.3.1 Validate arguments against parameter rules
         if validate:
             for name, value in bound.arguments.items():
                 rule = compiled.get(name)
                 if rule is not None:
                     rule.validate(value, value_name=name, context=context)
 
-        # 5.3 Execute target function
+        # 6.4 Execute target function
         result = raw_func(*args, **kwargs)
 
-        # 5.4 Validate return value if requested
+        # 6.5 Validate return value if requested
         if validate and return_rule is not None:
             return_rule.validate(result, value_name="return value", context=context)
 
-        # 5.5 Return validated result
+        # 6.6 Return validated result
         return result
 
-    # 5.6 Mark wrapper for future unwrap inspection
+    # 6.7 Mark wrapper for future unwrap inspection
     sync_wrapper._is_validate_call_wrapper = True  # type: ignore[attr-defined]
     return sync_wrapper
 
@@ -291,4 +337,52 @@ Both returned wrappers attach `_is_validate_call_wrapper = True`.
 This explicit marker enables `unwrap_validate_call` to surgically identify and
 peel away prior `@validate_call` layers without stripping away arbitrary user
 decorators (such as `@cache` or `@retry`).
+
+---
+
+## 10. `materialize_iterators` — Opt-In Conversion Instead of Rejection
+
+`Iterable[T]` rejects one-shot iterators (IsReiterable), because validating
+one would silently exhaust it before the function ever runs. Rejection stays
+the default. `materialize_iterators=True` lets the caller of the decorator
+choose, consciously, to consume the iterator once and hand the function a
+tuple instead — so nothing is changed silently.
+
+* **Scope:** only validated parameters annotated `Iterable[T]` (also inside
+  a union or `Annotated`). Bare `Iterable` is never rejected and so is never
+  converted — a function that wants the lazy iterator keeps it. Detected once
+  at decoration time (find_iterable_parameters).
+* **Call time:** materialize_iterator_arguments replaces Iterator arguments
+  in `bound.arguments`. Only when something was converted does the wrapper
+  call the function with `bound.args` / `bound.kwargs`; otherwise the original
+  `args` / `kwargs` are used unchanged.
+* **Bypass:** with `_validate_call=False` nothing is converted — a bypassed
+  call is passed through exactly as given.
+* **Decoration-time guard:** the flag with no eligible parameter raises
+  ParamError (raise_no_iterable_parameter) rather than silently doing nothing.
+* **Caveat:** infinite or huge iterators are the user's responsibility once
+  the flag is on.
+
+---
+
+## 11. String Annotations and Forward References
+
+Annotations written as strings — by hand, or all of them at once by
+`from __future__ import annotations` — are turned into real objects before any
+rule is built (resolve_signature), so build_typing_rule, the `Iterable[T]`
+detection and the return-value rule always see actual types. Annotations that
+are already objects are never touched, so existing code behaves as before.
+
+* **Binding is separate from resolving.** `signature.bind(...)` needs only
+  parameter names, so the wrapper binds with the plain signature and never
+  depends on resolution.
+* **Early when possible, late when needed.** If every name exists while the
+  decorator runs, the rules are built immediately and configuration errors are
+  raised at decoration time as always. If a name does not exist yet — a method
+  annotated with its own class, a class defined further down the module — the
+  rules are built on the first call and cached (lazy_signature_state); the
+  configuration errors of that one function are then raised on that first call.
+* **Still missing at the first call** is reported by
+  raise_unresolvable_annotation (a class defined inside another function, a name
+  imported only under TYPE_CHECKING, a typo).
 """

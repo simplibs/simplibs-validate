@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=69.0"]
+requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "simplibs-validate"
-version = "0.3.2"
+version = "0.4.0"
 description = "A powerful, composable, and developer-friendly validation framework for Python with detailed diagnostic telemetry."
 readme = "README.md"
 license = "MIT"
@@ -51,14 +51,26 @@ Changelog = "https://github.com/simplibs/simplibs-validate/blob/main/CHANGELOG.m
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21.0",
+    "pytest-cov>=5.0",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "-v"
+addopts = "-v -rs"                                # -rs lists every skipped test with its reason
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
+[tool.coverage.run]
+branch = true
+source = ["simplibs.extractor"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"simplibs.extractor" = ["py.typed"]               # without this section py.typed is NOT in the wheel

@@ -7,7 +7,7 @@ def is_bypass_parameter(param: inspect.Parameter) -> bool:
     """True if this parameter is validate_call's reserved per-call bypass switch.
 
     A parameter literally named "_validate_call", with no annotation or an
-    explicit `bool` annotation, is treated as a per-call opt-out rather
+    explicit `bool` annotation (also written as the string "bool"), is treated as a per-call opt-out rather
     than a value to validate — e.g. `def f(x: int, *, _validate_call: bool = True)`.
     A parameter named "_validate_call" with any OTHER annotation is treated as
     an ordinary parameter and validated normally (see design notes).
@@ -19,9 +19,11 @@ def is_bypass_parameter(param: inspect.Parameter) -> bool:
         True if this parameter should be excluded from rule compilation
         and instead checked at call time to skip validation entirely.
     """
+    # An annotation written as a string ("bool", from `from __future__ import
+    # annotations`) is the same declaration — it must not silently lose the switch
     return (
         param.name == BYPASS_PARAM_NAME
-        and param.annotation in (inspect.Parameter.empty, bool)
+        and param.annotation in (inspect.Parameter.empty, bool, "bool")
     )
 
 
@@ -65,4 +67,13 @@ annotation other than `bool` (or no bypass semantics intended, an
 explicit override could also be added) causes it to be treated as an
 ordinary parameter, validated like any other. Only the specific
 "named _validate_call, boolean or unannotated" shape triggers bypass behavior.
+
+---
+
+## 3. String Annotations
+
+With `from __future__ import annotations` every annotation is a string, so the
+declaration `_validate_call: bool` arrives as `"bool"`. It is recognized the
+same way as the object `bool`; without this the switch would stop working in
+such modules without any error.
 """

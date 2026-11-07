@@ -79,3 +79,75 @@ def test_string_rule_invalid_init_parameters(subtests):
         ],
         verbose=False,
     )
+
+
+def test_string_rule_exact_length(subtests):
+    """Verify length alone requires exactly that many characters."""
+    assert_rule_contract(
+        subtests,
+        rule=string_rule(length=3),
+        valid_values=["abc", "   "],
+        invalid_values=["ab", "abcd", "", 123],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_string_rule_is_substring_of(subtests):
+    """Verify is_substring_of requires the value to occur inside the given string."""
+    assert_rule_contract(
+        subtests,
+        rule=string_rule(is_substring_of="hello world"),
+        valid_values=["hello", "world", "o w"],
+        invalid_values=["goodbye", "hello world!", 123],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_string_rule_equals(subtests):
+    """Verify equals is an exact, case-sensitive match."""
+    assert_rule_contract(
+        subtests,
+        rule=string_rule(equals="abc"),
+        valid_values=["abc"],
+        invalid_values=["abd", "ABC", ""],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_string_rule_not_equals(subtests):
+    """Verify not_equals rejects only the exact string."""
+    assert_rule_contract(
+        subtests,
+        rule=string_rule(not_equals="abc"),
+        valid_values=["abd", "ABC", ""],
+        invalid_values=["abc"],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_string_rule_is_in(subtests):
+    """Verify is_in accepts only the listed strings."""
+    assert_rule_contract(
+        subtests,
+        rule=string_rule(is_in={"a", "b"}),
+        valid_values=["a", "b"],
+        invalid_values=["c", ""],
+        deep_check=True,
+        verbose=False,
+    )
+
+
+def test_string_rule_not_in(subtests):
+    """Verify not_in rejects the listed strings."""
+    assert_rule_contract(
+        subtests,
+        rule=string_rule(not_in={"a", "b"}),
+        valid_values=["c", ""],
+        invalid_values=["a", "b"],
+        deep_check=True,
+        verbose=False,
+    )

@@ -1,5 +1,5 @@
 from .validate_call import validate_call
-from ._helpers import compile_parameter_rules
+from ._helpers import compile_parameter_rules, lazy_signature_state
 
 
 _DESIGN_NOTES = """
