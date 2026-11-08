@@ -1,4 +1,6 @@
+import inspect
 import logging
+from typing import Any
 from unittest.mock import MagicMock
 import pytest
 
@@ -462,3 +464,99 @@ def test_log_this_real_logger_info_level_logs_nothing(caplog: pytest.LogCaptureF
 
     assert caplog.records == []
     assert spy.calls == 0
+
+
+# ============================================================================
+# Parameters whose default is `inspect.Parameter.empty`
+# ============================================================================
+
+def test_log_this_empty_default_parameter_can_be_omitted() -> None:
+    """Verify a call that leaves out an `inspect.Parameter.empty`-default parameter runs and is logged."""
+    mock_logger = MagicMock(spec=logging.Logger)
+
+    @log_this(logger=mock_logger)
+    def build(name: str, annotation: Any = inspect.Parameter.empty) -> tuple:
+        return (name, annotation)
+
+    assert build("x") == ("x", inspect.Parameter.empty)
+
+    assert mock_logger.log.call_count == 2
+    assert "name='x'" in mock_logger.log.call_args_list[0].args[3]
+
+
+def test_log_this_empty_default_keyword_only_parameter_can_be_omitted() -> None:
+    """Verify the same for a keyword-only parameter."""
+    mock_logger = MagicMock(spec=logging.Logger)
+
+    @log_this(logger=mock_logger)
+    def build(name: str, *, annotation: Any = inspect.Parameter.empty) -> tuple:
+        return (name, annotation)
+
+    assert build("x") == ("x", inspect.Parameter.empty)
+    assert mock_logger.log.call_count == 2
+
+
+def test_log_this_empty_default_given_value_is_logged() -> None:
+    """Verify such a parameter is part of the logged call when it was passed."""
+    mock_logger = MagicMock(spec=logging.Logger)
+
+    @log_this(logger=mock_logger)
+    def build(name: str, annotation: Any = inspect.Parameter.empty) -> tuple:
+        return (name, annotation)
+
+    assert build("x", annotation=int) == ("x", int)
+
+    assert "annotation=" in mock_logger.log.call_args_list[0].args[3]
+
+
+def test_log_this_lazy_failure_describes_arguments_when_empty_default_is_omitted() -> None:
+    """Verify the failure record is still built when only ERROR is enabled and such a parameter is omitted."""
+    mock_logger = _silent_logger(enabled={logging.ERROR})
+
+    @log_this(logger=mock_logger)
+    def fail(name: str, annotation: Any = inspect.Parameter.empty) -> None:
+        raise ValueError("boom")
+
+    with pytest.raises(ValueError, match="boom"):
+        fail("x")
+
+    assert mock_logger.error.call_args.args[2] == "name='x'"
+
+
+@pytest.mark.asyncio
+async def test_log_this_async_empty_default_parameter_can_be_omitted() -> None:
+    """Verify the async wrapper accepts a call that omits an `empty`-default parameter."""
+    mock_logger = MagicMock(spec=logging.Logger)
+
+    @log_this(logger=mock_logger)
+    async def build(name: str, annotation: Any = inspect.Parameter.empty) -> tuple:
+        return (name, annotation)
+
+    assert await build("x") == ("x", inspect.Parameter.empty)
+    assert mock_logger.log.call_count == 2
+
+
+def test_log_this_missing_required_argument_still_raises_type_error() -> None:
+    """Verify a really missing argument raises the function's own TypeError and is logged as its failure."""
+    mock_logger = MagicMock(spec=logging.Logger)
+
+    @log_this(logger=mock_logger)
+    def add(a: int, b: int) -> int:
+        return a + b
+
+    with pytest.raises(TypeError, match="'b'"):
+        add(1)
+
+    mock_logger.error.assert_called_once()
+
+
+def test_log_this_too_many_arguments_still_raises_type_error() -> None:
+    """Verify surplus positional arguments are still rejected."""
+    mock_logger = MagicMock(spec=logging.Logger)
+
+    @log_this(logger=mock_logger)
+    def add(a: int, b: int) -> int:
+        return a + b
+
+    with pytest.raises(TypeError):
+        add(1, 2, 3)  # type: ignore[call-arg]

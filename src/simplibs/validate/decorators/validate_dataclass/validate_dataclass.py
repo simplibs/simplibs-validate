@@ -126,8 +126,11 @@ def validate_dataclass(
         # 5.1 Rules (cached after the first construction)
         compiled = get_compiled()
 
-        # 5.1.1 Bind call arguments to signature
-        bound = signature.bind(self, *args, **kwargs)
+        # 5.1.1 Bind call arguments to signature — partially on purpose: a field whose
+        #       default is `inspect.Parameter.empty` looks required to `inspect`, so a
+        #       strict bind would reject a construction that omits it. A really missing
+        #       argument is reported by the original __init__ when it is called.
+        bound = signature.bind_partial(self, *args, **kwargs)
         bound.apply_defaults()
 
         # 5.2 Validate arguments against parameter rules
@@ -260,4 +263,17 @@ defined further down — names that do not exist yet when this decorator runs.
 Rules are therefore built through validate_call's lazy_signature_state: at
 decoration time when every annotation resolves, otherwise on the first
 construction (cached afterwards). See validate_call's design notes, section 11.
+
+---
+
+## 9. Binding Is Partial
+
+The constructor arguments are bound with `signature.bind_partial`, exactly as in
+validate_call (see its design notes, section 4). A field whose default is
+`inspect.Parameter.empty` looks like a required one to `inspect`, so a strict
+`bind` rejected every construction that omitted it before `__init__` could run.
+Now such a field is simply absent from `bound.arguments` and is not validated; a
+value that was passed is validated as usual. Too many arguments and an unknown
+keyword still raise `TypeError` from the bind; a field that is really missing is
+reported by the original `__init__` (Python's own message).
 """

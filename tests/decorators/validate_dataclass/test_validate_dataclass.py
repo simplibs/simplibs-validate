@@ -1,4 +1,6 @@
+import inspect
 from dataclasses import dataclass
+from typing import Any
 import pytest
 from simplibs.exception import ParamError, ValidationError
 from simplibs.validate.decorators.validate_dataclass import validate_dataclass
@@ -145,3 +147,87 @@ def test_validate_dataclass_marker_without_wrapped_reference_is_still_handled() 
 
     with pytest.raises(ValidationError):
         User("Alice", "thirty")
+
+
+# ============================================================================
+# Fields whose default is `inspect.Parameter.empty`
+# ============================================================================
+
+def test_validate_dataclass_empty_default_field_can_be_omitted() -> None:
+    """Verify a field defaulting to `inspect.Parameter.empty` can be left out of the constructor call."""
+
+    @validate_dataclass
+    @dataclass
+    class Slot:
+        name: str
+        annotation: Any = inspect.Parameter.empty
+
+    slot = Slot("x")
+
+    assert slot.name == "x"
+    assert slot.annotation is inspect.Parameter.empty
+
+
+def test_validate_dataclass_empty_default_field_can_be_given() -> None:
+    """Verify such a field still receives the value that was passed."""
+
+    @validate_dataclass
+    @dataclass
+    class Slot:
+        name: str
+        annotation: Any = inspect.Parameter.empty
+
+    assert Slot("x", int).annotation is int
+
+
+def test_validate_dataclass_empty_default_keyword_only_field_can_be_omitted() -> None:
+    """Verify the same for a keyword-only dataclass."""
+
+    @validate_dataclass
+    @dataclass(kw_only=True)
+    class Slot:
+        name: str
+        annotation: Any = inspect.Parameter.empty
+
+    slot = Slot(name="x")
+
+    assert slot.annotation is inspect.Parameter.empty
+
+
+def test_validate_dataclass_empty_default_other_fields_are_still_validated() -> None:
+    """Verify omitting an `empty`-default field does not switch validation off for the rest."""
+
+    @validate_dataclass
+    @dataclass
+    class Slot:
+        name: str
+        annotation: Any = inspect.Parameter.empty
+
+    with pytest.raises(ValidationError):
+        Slot(1)
+
+
+def test_validate_dataclass_missing_required_field_is_still_a_type_error() -> None:
+    """Verify a really missing field still raises TypeError, now from the original __init__."""
+
+    @validate_dataclass
+    @dataclass
+    class User:
+        name: str
+        age: int
+
+    with pytest.raises(TypeError, match="'age'"):
+        User("Alice")
+
+
+def test_validate_dataclass_too_many_arguments_is_still_a_type_error() -> None:
+    """Verify surplus positional arguments are still rejected."""
+
+    @validate_dataclass
+    @dataclass
+    class User:
+        name: str
+        age: int
+
+    with pytest.raises(TypeError):
+        User("Alice", 30, 1)

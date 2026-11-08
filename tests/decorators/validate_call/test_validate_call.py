@@ -1,6 +1,6 @@
 import inspect
 from collections.abc import Iterable
-from typing import Callable
+from typing import Any, Callable
 
 import pytest
 
@@ -610,3 +610,191 @@ def test_validate_call_materialize_iterators_variadic_iterable_raises() -> None:
             return 0
 
     assert exc_info.value.error_name == "VALIDATE_CALL_NO_ITERABLE_PARAM_ERROR"
+
+
+# ============================================================================
+# Parameters whose default is `inspect.Parameter.empty`
+# ============================================================================
+
+def test_validate_call_empty_default_can_be_omitted() -> None:
+    """Verify a keyword-only parameter defaulting to `inspect.Parameter.empty` can be left out."""
+
+    @validate_call
+    def build(name: str, *, annotation: Any = inspect.Parameter.empty) -> tuple:
+        return (name, annotation)
+
+    assert build("x") == ("x", inspect.Parameter.empty)
+
+
+def test_validate_call_empty_default_can_be_given() -> None:
+    """Verify such a parameter still receives the value that was passed."""
+
+    @validate_call
+    def build(name: str, *, annotation: Any = inspect.Parameter.empty) -> tuple:
+        return (name, annotation)
+
+    assert build("x", annotation=int) == ("x", int)
+
+
+def test_validate_call_empty_default_positional_parameter_can_be_omitted() -> None:
+    """Verify an ordinary (positional) parameter with that default can be left out too."""
+
+    @validate_call
+    def build(name: str, annotation: Any = inspect.Parameter.empty) -> tuple:
+        return (name, annotation)
+
+    assert build("x") == ("x", inspect.Parameter.empty)
+    assert build("x", int) == ("x", int)
+
+
+def test_validate_call_signature_empty_default_can_be_omitted() -> None:
+    """Verify `inspect.Signature.empty` (the same object) behaves the same way."""
+
+    @validate_call
+    def compose(parameters: list, return_annotation: Any = inspect.Signature.empty) -> tuple:
+        return (parameters, return_annotation)
+
+    assert compose([]) == ([], inspect.Signature.empty)
+
+
+def test_validate_call_empty_default_omitted_parameter_is_not_validated() -> None:
+    """Verify an omitted parameter with an `empty` default is skipped, not checked against its annotation."""
+
+    @validate_call
+    def read(value: int = inspect.Parameter.empty) -> object:
+        return value
+
+    assert read() is inspect.Parameter.empty
+
+
+def test_validate_call_empty_default_given_value_is_still_validated() -> None:
+    """Verify a value passed to such a parameter is validated as usual."""
+
+    @validate_call
+    def read(value: int = inspect.Parameter.empty) -> object:
+        return value
+
+    assert read(3) == 3
+
+    with pytest.raises(ValidationError):
+        read("x")
+
+
+def test_validate_call_empty_default_other_parameters_are_still_validated() -> None:
+    """Verify omitting an `empty`-default parameter does not switch validation off for the rest."""
+
+    @validate_call
+    def build(name: str, *, annotation: Any = inspect.Parameter.empty) -> tuple:
+        return (name, annotation)
+
+    with pytest.raises(ValidationError):
+        build(1)
+
+
+def test_validate_call_empty_default_bypass_switch() -> None:
+    """Verify the bypass switch works on a call that omits an `empty`-default parameter."""
+
+    @validate_call
+    def build(
+        name: str,
+        *,
+        annotation: Any = inspect.Parameter.empty,
+        _validate_call: bool = True,
+    ) -> tuple:
+        return (name, annotation)
+
+    assert build(1, _validate_call=False) == (1, inspect.Parameter.empty)
+
+    with pytest.raises(ValidationError):
+        build(1)
+
+
+@pytest.mark.asyncio
+async def test_validate_call_empty_default_async() -> None:
+    """Verify async functions accept a call that omits an `empty`-default parameter."""
+
+    @validate_call
+    async def build(name: str, *, annotation: Any = inspect.Parameter.empty) -> tuple:
+        return (name, annotation)
+
+    assert await build("x") == ("x", inspect.Parameter.empty)
+
+    with pytest.raises(ValidationError):
+        await build(1)
+
+
+# ============================================================================
+# Binding errors that must stay TypeErrors (partial binding)
+# ============================================================================
+
+def test_validate_call_missing_required_argument_is_still_a_type_error() -> None:
+    """Verify a really missing argument still raises TypeError, now from the function call."""
+
+    @validate_call
+    def add(a: int, b: int) -> int:
+        return a + b
+
+    with pytest.raises(TypeError, match="'b'"):
+        add(1)
+
+
+def test_validate_call_too_many_arguments_is_still_a_type_error() -> None:
+    """Verify surplus positional arguments are still rejected."""
+
+    @validate_call
+    def add(a: int, b: int) -> int:
+        return a + b
+
+    with pytest.raises(TypeError):
+        add(1, 2, 3)
+
+
+def test_validate_call_unknown_keyword_is_still_a_type_error() -> None:
+    """Verify an unknown keyword argument is still rejected."""
+
+    @validate_call
+    def add(a: int, b: int) -> int:
+        return a + b
+
+    with pytest.raises(TypeError, match="'c'"):
+        add(1, 2, c=3)
+
+
+@pytest.mark.asyncio
+async def test_validate_call_async_missing_required_argument_is_still_a_type_error() -> None:
+    """Verify an async function with a really missing argument raises TypeError too."""
+
+    @validate_call
+    async def add(a: int, b: int) -> int:
+        return a + b
+
+    with pytest.raises(TypeError, match="'b'"):
+        await add(1)
+
+
+# ============================================================================
+# materialize_iterators=True together with `empty` defaults
+# ============================================================================
+
+def test_validate_call_materialize_iterators_with_omitted_empty_default() -> None:
+    """Verify the converted call still works when a keyword-only `empty`-default parameter is omitted."""
+
+    @validate_call(materialize_iterators=True)
+    def collect(items: Iterable[int], *, annotation: Any = inspect.Parameter.empty) -> tuple:
+        return (items, annotation)
+
+    assert collect(iter([1, 2])) == ((1, 2), inspect.Parameter.empty)
+
+
+def test_validate_call_materialize_iterators_with_empty_default_gap() -> None:
+    """Verify the converted call works with a gap before a parameter that can be passed by keyword."""
+
+    @validate_call(materialize_iterators=True)
+    def collect(
+        items: Iterable[int],
+        marker: Any = inspect.Parameter.empty,
+        limit: int = 5,
+    ) -> tuple:
+        return (items, marker, limit)
+
+    assert collect(iter([1, 2])) == ((1, 2), inspect.Parameter.empty, 5)

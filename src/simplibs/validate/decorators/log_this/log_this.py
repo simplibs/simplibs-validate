@@ -124,7 +124,9 @@ def log_this(
 
     # 4. Shared by both wrappers: render the call signature of one concrete call
     def render_call(args: tuple, kwargs: dict) -> str:
-        bound = signature.bind(*args, **kwargs)
+        # Partial on purpose: a parameter whose default is `inspect.Parameter.empty` looks
+        # required to `inspect`, so a strict bind would fail here, before the function runs
+        bound = signature.bind_partial(*args, **kwargs)
         bound.apply_defaults()
         return format_bound_arguments(bound, exclude=exclude, repr_func=repr_func)
 
@@ -342,4 +344,15 @@ is logged and the original exception propagates untouched.
 * No separate limits for arguments vs. result, or for strings vs.
   containers — one number (`max_items`) is the whole knob. `None` is the
   escape hatch.
+
+---
+
+## 10. Arguments Are Bound Partially
+
+`render_call` uses `signature.bind_partial`, so a call that omits a parameter
+whose default is `inspect.Parameter.empty` (which `inspect` cannot tell from "no
+default") is logged and runs instead of failing inside the decorator. The omitted
+parameter is simply not part of the logged call. A really missing argument is
+reported by the function itself — and logged as its failure — while too many
+arguments or an unknown keyword still make the bind raise `TypeError`.
 """

@@ -48,7 +48,7 @@ going through the decorator machinery.
 structural fact about the function's signature — knowable once, when the
 decorator is applied. But the *value* passed for that parameter on any
 given call — True, False, or its default — depends on that call's actual
-arguments, which do not exist until `bound = signature.bind(*args,
+arguments, which do not exist until `bound = signature.bind_partial(*args,
 **kwargs)` runs inside the wrapper. This function is therefore
 necessarily called once per invocation, never memoized alongside
 `has_bypass` itself.

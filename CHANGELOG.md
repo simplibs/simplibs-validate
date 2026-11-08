@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.4.1] - 2026-11-08
+
+### 🐛 Fixed
+
+* `validate_call` rejected a call that left out a parameter whose default is
+  `inspect.Parameter.empty` (or `inspect.Signature.empty`) with
+  `TypeError: missing a required argument`, although the function itself accepts such a call.
+  `inspect` cannot tell this default from "no default", and the arguments were bound strictly
+  before the function could run — even with the bypass switch (`_validate_call=False`), which
+  is read only after the bind. The arguments are now bound partially: an omitted parameter of
+  this kind is simply not validated, a passed one is validated as usual.
+  * A really missing argument is still a `TypeError`, now raised by the function call itself,
+    so its message is Python's own (`f() missing 1 required positional argument: 'b'`). When
+    another argument is invalid at the same time, the `ParamError` of that argument can now
+    come first.
+  * Too many arguments and an unknown keyword are rejected exactly as before.
+  * Known limit with `materialize_iterators=True`: a positional-only parameter placed *after*
+    an omitted `empty`-default parameter cannot be passed on after the conversion.
+* `validate_dataclass` had the same problem: constructing an instance without a field whose
+  default is `inspect.Parameter.empty` failed with `TypeError: missing a required argument`.
+  The constructor arguments are now bound partially as well; a really missing field is reported
+  by the original `__init__`.
+* `log_this` had the same problem whenever the entry level was enabled: a call that omitted a
+  parameter with an `inspect.Parameter.empty` default failed inside the decorator before the
+  function ran. The call is now bound partially, so the function runs and the call is logged
+  without the omitted parameter.
+
+### 📋 Improved
+
+* Tests for parameters with an `inspect.Parameter.empty` / `inspect.Signature.empty` default
+  (sync, async, bypass switch, `materialize_iterators`) and for the binding errors that must
+  remain `TypeError`s.
+* The same cases for `validate_dataclass` (omitted and passed `empty`-default fields, keyword-only
+  dataclasses, missing and surplus arguments) and for `log_this` (sync, async, lazy failure
+  record, missing and surplus arguments).
+
+### 📚 Documentation
+
+* `_DESIGN_NOTES` of `validate_call` (sections 4, 10 and 11) describe the partial binding and
+  its known limit; the notes of `validate_dataclass` (section 9), `log_this` (section 10) and
+  `should_validate` mention it too.
+
+---
+
 ## [0.4.0] - 2026-11-07
 
 ### ⚠️ Breaking Changes

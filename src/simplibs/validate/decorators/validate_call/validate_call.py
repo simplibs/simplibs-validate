@@ -154,8 +154,11 @@ def validate_call(
             # 5.1 Rules (cached after the first call)
             compiled, return_rule, iterable_names = get_state()
 
-            # 5.2 Bind call arguments to signature
-            bound = signature.bind(*args, **kwargs)
+            # 5.2 Bind call arguments to signature — partially on purpose: a parameter
+            #     whose default is `inspect.Parameter.empty` looks required to `inspect`,
+            #     so a strict bind would reject a call that omits it. A really missing
+            #     argument is reported by the function itself when it is called.
+            bound = signature.bind_partial(*args, **kwargs)
             bound.apply_defaults()
             validate = should_validate(bound, has_bypass=has_bypass)
 
@@ -191,8 +194,11 @@ def validate_call(
         # 6.1 Rules (cached after the first call)
         compiled, return_rule, iterable_names = get_state()
 
-        # 6.2 Bind call arguments to signature
-        bound = signature.bind(*args, **kwargs)
+        # 6.2 Bind call arguments to signature — partially on purpose: a parameter
+        #     whose default is `inspect.Parameter.empty` looks required to `inspect`,
+        #     so a strict bind would reject a call that omits it. A really missing
+        #     argument is reported by the function itself when it is called.
+        bound = signature.bind_partial(*args, **kwargs)
         bound.apply_defaults()
         validate = should_validate(bound, has_bypass=has_bypass)
 
@@ -271,6 +277,18 @@ Without this, a parameter left at its default value would never appear
 in `bound.arguments` and would silently skip validation — including
 cases where the default itself violates the parameter's own annotation.
 
+The binding itself is partial (`bind_partial`), not strict. `inspect` cannot tell a
+default of `inspect.Parameter.empty` (or `inspect.Signature.empty` — the same object)
+from "no default", so a strict `bind` rejected every call that omitted such a
+parameter before the function could run, even with `_validate_call=False` (the bind
+runs before the bypass is read). With a partial bind such a parameter is simply
+absent from `bound.arguments` and is not validated; one that was passed is validated
+as usual. What a strict bind used to report is still reported: too many arguments,
+an unknown keyword and a duplicated argument raise `TypeError` from the bind itself;
+an argument that is really missing raises `TypeError` from the function call
+(Python's own message), because `validate_call` cannot know whether a parameter
+without a visible default is required.
+
 ---
 
 ## 5. Return-Value Validation Is Opt-In, and Symmetric With `check`'s Guard
@@ -316,8 +334,8 @@ that condition can never be true when `has_bypass` is also true, since
 `has_bypass` itself is only ever set by finding `_validate_call` inside
 `signature.parameters` in the first place. The block was unreachable
 dead code and has been removed. (It was also unreachable for the
-opposite reason on functions with `has_bypass=False`: `signature.bind()`
-two lines above it already raises `TypeError` for an unexpected
+opposite reason on functions with `has_bypass=False`: `signature.bind_partial()`
+just above it already raises `TypeError` for an unexpected
 `_validate_call` keyword before that code could ever run.)
 
 Per this decorator's own documented contract, `_validate_call` — when a
@@ -362,6 +380,11 @@ tuple instead — so nothing is changed silently.
   ParamError (raise_no_iterable_parameter) rather than silently doing nothing.
 * **Caveat:** infinite or huge iterators are the user's responsibility once
   the flag is on.
+* **Known limit:** the call is rebuilt from `bound.args` / `bound.kwargs`. A
+  parameter that was omitted because its default is `inspect.Parameter.empty`
+  leaves a gap, and a positional-only parameter *after* such a gap would be passed
+  by keyword and fail. Parameters that can also be given by keyword (the usual
+  case) are unaffected.
 
 ---
 
@@ -373,7 +396,7 @@ rule is built (resolve_signature), so build_typing_rule, the `Iterable[T]`
 detection and the return-value rule always see actual types. Annotations that
 are already objects are never touched, so existing code behaves as before.
 
-* **Binding is separate from resolving.** `signature.bind(...)` needs only
+* **Binding is separate from resolving.** `signature.bind_partial(...)` needs only
   parameter names, so the wrapper binds with the plain signature and never
   depends on resolution.
 * **Early when possible, late when needed.** If every name exists while the
