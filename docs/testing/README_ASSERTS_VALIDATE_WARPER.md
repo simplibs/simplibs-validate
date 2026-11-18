@@ -50,10 +50,13 @@ halves of every such pair expose the same constraints and delegate correctly to
 1. **Signature Alignment** — every parameter `rule_factory` accepts must also exist on
    `validate_func`, and `validate_func` must additionally expose the four standard
    control parameters (`value_name`, `context`, `return_bool`, `return_value`).
+   Nothing else may be on `validate_func`: a parameter added to the wrapper and forgotten on the
+   factory is drift too (the first parameter, the validated value, and `*args` / `**kwargs` are not counted).
 2. **Successful Delegation** — a valid value passes normally, and correctly returns
    the original value when `return_value=True`.
 3. **Failure Delegation** — an invalid value returns `False` under `return_bool=True`,
-   and raises when it isn't.
+   and raises when it isn't. The exception must be an instance of `expected_exception_type`
+   (`ValidationError` by default), not just any exception.
 
 [▲ Back to top](#-table-of-contents)
 
@@ -119,6 +122,13 @@ assert_validate_wrapper(
 * **`verbose`** (`bool`):
   Default: `True`.
   Controls pytest subtest frame allocation for each individual check.
+* **`expected_exception_type`** (`type[Exception]`):
+  Default: `ValidationError`.
+  The exception an invalid value must raise (checked with `isinstance`). Pass it explicitly when
+  the wrapper is meant to fail with something else.
+* **`intro`** (`str`):
+  Default: `""`.
+  Prefix placed before the generated `[validate_func name] ` prefix of the subtest names.
 
 ```python
 # Function signature:
@@ -130,7 +140,9 @@ def assert_validate_wrapper(
     valid_value: Any,
     invalid_value: Any,
     sample_params: dict[str, Any] | None = None,
+    expected_exception_type: type[Exception] = ValidationError,
     verbose: bool = True,
+    intro: str = "",
 ) -> None:
 ```
 
@@ -142,10 +154,11 @@ def assert_validate_wrapper(
 
 ### Phase 1: Signature Alignment
 
-Reflects both callables' signatures via `inspect.signature` and checks two things:
+Reflects both callables' signatures via `inspect.signature` and checks three things:
 every parameter `rule_factory` accepts is also present on `validate_func`, and
 `validate_func` additionally carries the four control parameters that have no reason
-to exist on `rule_factory` itself.
+to exist on `rule_factory` itself. Third, `validate_func` carries nothing beyond the factory's
+parameters, the control parameters and the value it validates (`signature_no_extra_params`).
 
 ```python
 # Executed under the hood:

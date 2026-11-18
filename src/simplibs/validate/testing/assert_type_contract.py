@@ -16,6 +16,7 @@ def assert_type_contract(
     *,
     expected_error_name: str | Sequence[str | None] | None = None,
     expected_exception_type: type[Exception] | Sequence[type[Exception] | None] | None = None,
+    expected_description: str | None = None,
     sample_label: str = "target_var",
     sample_context: str = "test_execution_context",
     check_value: bool = True,
@@ -49,6 +50,8 @@ def assert_type_contract(
         expected_exception_type: If provided, asserted against raised exceptions'
             wrapped exception types. Can be a single exception class or a Sequence
             matching invalid_values index-by-index (use None to skip specific indices).
+        expected_description: If provided, the description of the decomposed rule
+            (`rule.describe()`) must equal this text exactly.
         sample_label: The value_name used when probing build_exception().
         sample_context: The context used when probing build_exception().
         check_value: If True, asserts that exc.value strictly matches the raw
@@ -77,6 +80,7 @@ def assert_type_contract(
         invalid_values,
         expected_error_name=expected_error_name,
         expected_exception_type=expected_exception_type,
+        expected_description=expected_description,
         sample_label=sample_label,
         sample_context=sample_context,
         check_value=check_value,
@@ -130,7 +134,13 @@ bug in how `validate_call` extracts and applies a parameter's annotation
 still break in real execution. `check_validate_call=True` (the default) catches
 exactly that class of bug.
 
-## 3. Reused vs. New
+## 3. The Description Can Be Pinned
+`expected_description` is passed on to `assert_rule_contract`, so the text of the decomposed rule
+(`describe()`) can be pinned for a type as it can for a rule. Without it only the generic contract
+is checked. The constructor guard of `assert_rule_contract` is not reachable from a type, because
+a type has no rule class of its own to construct.
+
+## 4. Reused vs. New
 
 * **Reused wholesale**: `is_valid`/`__call__`, `validate()` mode matrix,
   `build_exception()` diagnostics, optional constructor `ParamError` sweep —

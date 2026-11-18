@@ -85,6 +85,8 @@ assert_type_contract(
 
 * **`expected_error_name`** (`str | None`): Default `None`. Expected `error_name` string on generated exceptions.
 * **`expected_exception_type`** (`type[Exception] | None`): Default `None`. Expected underlying exception class wrapped inside the `ValidationError`.
+* **`expected_description`** (`str | None`): Default `None`. If given, `describe()` of the decomposed rule
+  must equal this text exactly (passed on to `assert_rule_contract`). Without it only the generic contract is checked.
 * **`sample_label`** (`str`): Default `"target_var"`. Label used during exception diagnostic probing.
 * **`sample_context`** (`str`): Default `"test_execution_context"`. Context string used during exception diagnostic probing.
 * **`check_value`** (`bool`): Default `True`. Asserts that `exc.value` matches the input value strictly.
@@ -103,6 +105,7 @@ def assert_type_contract(
     *,
     expected_error_name: str | None = None,
     expected_exception_type: type[Exception] | None = None,
+    expected_description: str | None = None,
     sample_label: str = "target_var",
     sample_context: str = "test_execution_context",
     check_value: bool = True,

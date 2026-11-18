@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.4.2] - 2026-11-18
+
+### 🔄 Changed
+
+* **`assert_validate_wrapper` checks drift in both directions.** Until now it caught a parameter of
+  the `*_rule` factory that is missing on the `validate_*` wrapper. The reverse, a parameter added to
+  the wrapper and forgotten on the factory, passed unnoticed. A new subtest `signature_no_extra_params`
+  reports it. The first parameter of the wrapper (the validated value) and `*args` / `**kwargs` are
+  not counted.
+* **`assert_validate_wrapper` checks the exception type.** An invalid value must raise an instance of
+  the new `expected_exception_type` (default `ValidationError`), not just any exception, so a wrapper
+  that fails with a native `TypeError` is caught. A wrapper that raises something else on purpose
+  passes the expected type explicitly.
+* **Failure messages**: the plain `assert` statements of `assert_validate_wrapper` now say what was
+  expected. pytest does not rewrite the asserts of an installed package, so they failed with an empty
+  text.
+
+### ✨ Added
+
+* **`assert_validate_wrapper(intro=...)`**: an optional prefix placed before the generated
+  `[validate_func name] ` prefix of the subtest names (the old names are kept when it is empty).
+* **`assert_type_contract(expected_description=...)`**: pins the text of `describe()` of the decomposed
+  rule (passed on to `assert_rule_contract`). Without it only the generic contract is checked.
+
+### 📋 Improved
+
+* **Tests**: new tests for the drift check, the exception type, `intro` and `expected_description`.
+
+---
+
 ## [0.4.1] - 2026-11-08
 
 ### 🐛 Fixed
